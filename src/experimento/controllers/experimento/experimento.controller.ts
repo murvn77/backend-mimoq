@@ -7,7 +7,6 @@ import { ExperimentoService } from 'src/experimento/services/experimento/experim
 @Controller('experimento')
 export class ExperimentoController {
     constructor(
-        //   @Inject(config.KEY) private configService: ConfigType<typeof config>,
         private experimentoService: ExperimentoService,
     ) { }
 

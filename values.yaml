@@ -1,4 +1,4 @@
-nombreAplicacion: mi-aplicacion
-nombreImagen: localhost:5000/murvn77/docker-graphql
-etiquetaImagen: 1.0.0
-replicas: 2
+appName: proyecto-de-graphql-y-docker
+cantReplicas: '2'
+name: localhost:5000/qwer/asdf:123
+tag: '123'

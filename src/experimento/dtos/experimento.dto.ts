@@ -7,6 +7,7 @@ import {
   IsString,
 } from 'class-validator';
 
+// Experimento = carga ?
 export class CreateExperimentoDto {
   @IsNotEmpty()
   @IsString()

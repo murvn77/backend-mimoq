@@ -125,11 +125,10 @@ export class ExperimentoService {
       fs.writeFileSync('values.yaml', yamlContent, 'utf8');
 
       // Ejecutar Helm con los valores personalizados
-      const helmCommand = `helm install mywebapp-release-2 C:/Users/maure/Desktop/templates-deployment --values values.yaml`;
+      const helmCommand = `helm install mywebapp-release3-4-2 C:/Users/maure/Desktop/templates-deployment --values values.yaml`;
       
-
       //** CONTRUIR METODO UPDATE */
-      // const helmCommand = `helm upgrade mywebapp-release-2 C:/Users/maure/Desktop/templates-deployment --values values.yaml`;
+      // const helmCommand = `helm upgrade mywebapp-release-4 C:/Users/maure/Desktop/templates-deployment --values values.yaml`;
       exec(helmCommand, (error, stdout, stderr) => {
         if (error) {
           console.error(`Error al ejecutar Helm: ${error}`);
