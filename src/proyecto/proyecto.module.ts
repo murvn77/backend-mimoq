@@ -7,8 +7,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Proyecto } from './entities/proyecto.entity';
 import { Despliegue } from './entities/despliegue.entity';
 import { UsuarioModule } from 'src/usuario/usuario.module';
-import { DockerService } from './services/docker/docker.service';
-import { HelmService } from './services/helm/helm.service';
 
 @Module({
   imports: [
@@ -18,7 +16,7 @@ import { HelmService } from './services/helm/helm.service';
     ]),
     UsuarioModule,
   ],
-  providers: [ProyectoService, DespliegueService, DockerService, HelmService],
+  providers: [ProyectoService, DespliegueService],
   controllers: [ProyectoController, DespliegueController],
 })
 export class ProyectoModule {}

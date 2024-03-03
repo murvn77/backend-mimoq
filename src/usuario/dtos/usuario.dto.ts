@@ -22,9 +22,6 @@ export class CreateUsuarioDto {
     @IsString()
     @ApiProperty()
     readonly contrasena: string;
-
-    // Relación proyecto
-
 }
 
 export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {}

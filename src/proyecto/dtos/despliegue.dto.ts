@@ -30,7 +30,7 @@ export class CreateDeploymentDto {
     @IsString()
     @ApiProperty()
     readonly nombre_img: string;
-    @IsNotEmpty()
+    // @IsNotEmpty()
     @IsString()
     @ApiProperty()
     readonly tag_img: string;

@@ -1,36 +1,41 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as path from 'path';
-import * as fs from 'fs-extra';
-import * as yaml from 'js-yaml';
+import { exec } from 'child_process';
 
-import simpleGit from 'simple-git';
-import { CreateExperimentoDto } from 'src/experimento/dtos/experimento.dto';
+import { CreateExperimentoDto, UpdateExperimentoDto } from 'src/experimento/dtos/experimento.dto';
 import { Experimento } from 'src/experimento/entities/experimento.entity';
 import { Repository } from 'typeorm';
 
-import { exec } from 'child_process';
-
-
-// @Injectable()
+@Injectable()
 export class ExperimentoService {
   constructor(
-    // @InjectRepository(Experimento)
+    @InjectRepository(Experimento)
     private experimentoRepo: Repository<Experimento>,
-
   ) { }
 
-  async findOneBy(id: number) {
+
+  async findAll() {
     try {
-      const exp = await this.experimentoRepo.findOneBy({
-        id_experimento: id
+      return await this.experimentoRepo.find({
+        // relations: ['rol', 'perfil', 'estadoUsuario'],
       });
-      if (!(exp instanceof Experimento)) {
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        `Problemas encontrando los experimentos: ${error}`,
+      );
+    }
+  }
+
+  async findOne(id: number) {
+    try {
+      const experiment = await this.experimentoRepo.findOneBy({ id_experimento: id });
+      if (!(experiment instanceof Experimento)) {
         throw new NotFoundException(
           `Experimento con id #${id} no se encuentra en la Base de Datos`,
         );
       }
-      return exp;
+      return experiment;
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
@@ -39,106 +44,83 @@ export class ExperimentoService {
     }
   }
 
-  async crearExperimento(data: CreateExperimentoDto) {
+  async createExperiment(data: CreateExperimentoDto) {
     try {
-      const git = simpleGit();
-      const tempDir = './temp-repo';
+      const dirLoad = './utils/generate-load-k6';
+      const nameImage = 'mimo1/load-k6:1.0.0';
+      const localRegistry = 'localhost:5000';
 
-      await git.clone(data.url_proyecto, tempDir);
+      const buildCommand = `docker build -t ${nameImage} ${dirLoad}`;
+      await this.executeCommand(buildCommand);
+      console.log(`Imagen Docker construida correctamente`);
 
-      const urlParts = data.url_proyecto.split('/');
-      const username = urlParts[urlParts.length - 2];
-      const repoName = urlParts[urlParts.length - 1].replace('.git', ''); // Eliminar ".git" del nombre del repositorio
+      const tagCommand = `docker tag ${nameImage} ${localRegistry}/${nameImage}`;
+      await this.executeCommand(tagCommand);
+      console.log(`Imagen Docker etiquetada correctamente`);
+      
+      const pushCommand = `docker push ${localRegistry}/${nameImage}`;
+      await this.executeCommand(pushCommand);
+      console.log(`Imagen Docker subida correctamente al registry local`);
+
+      // const customValuesLoad = {
+      //   appName: `${proyecto.titulo.toLowerCase().replace(/\s/g, '-')}`,
+      //   cantReplicas: `${data.cant_replicas}`,
+      //   name: `${localRegistry}/${nombreCompletoImagen}`,
+      //   tag: `${data.tag_img}`,
+      // };
+
+      console.log(`Genenerando carga en el microservicio`);
+
+      const loadCommand = `docker run -e API_URL=http://test.k6.io/ -e VUS=50 -e DURATION=1m -e ENDPOINTS="/contacts.php,/news.php,/browser.php" -e DELIMITER="," ${nameImage}`
+      const content = await this.executeCommand(loadCommand);
+
+      console.log('Contenido del comando: ', content)
 
 
-      const absolutePathToFile = path.join(tempDir, 'Dockerfile');
+      // const newExperiment = this.experimentoRepo.create(data);
 
-      // Leer el contenido del Dockerfile
-      const content = await fs.readFile(absolutePathToFile, 'utf8');
-
-      // Imprimir el contenido del Dockerfile
-      console.log('Contenido del Dockerfile:');
-      console.log(content);
-
-      this.construirImagen(username, repoName, tempDir)
-
-      // Eliminar el directorio clonado
-      // await fs.rm(tempDir, { recursive: true });
-
+      // return this.experimentoRepo.save(newExperiment);
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
-        `Problemas creando el usuario: ${error}`,
+        `Problemas creando el experimento: ${error}`,
       );
     }
   }
 
-  async construirImagen(username: string, repoName: string, tempDir: string) {
-    const nombreCompletoImagen = `${username}/${repoName}`;
-    const buildCommand = `docker build -t ${nombreCompletoImagen}:1.0.0 ${tempDir}`;
-
-    exec(buildCommand, async (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error al construir la imagen Docker: ${error}`);
-        return;
-      }
-      console.log(`Imagen Docker construida correctamente: ${stdout}`);
-
-      // Guardar la imagen construida en el registry local
-      const pushCommand = `docker tag ${nombreCompletoImagen}:1.0.0 localhost:5000/${nombreCompletoImagen}:1.0.0`;
-      exec(pushCommand, async (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error al etiquetar la imagen Docker: ${error}`);
-          return;
-        }
-        console.log(`Imagen Docker etiquetada correctamente: ${stdout}`);
-
-        const pushCommand = `docker push localhost:5000/${nombreCompletoImagen}:1.0.0`;
-        exec(pushCommand, (error, stdout, stderr) => {
-          if (error) {
-            console.error(`Error al subir la imagen Docker al registry local: ${error}`);
-            return;
-          }
-          console.log(`Imagen Docker subida correctamente al registry local: ${stdout}`);
-
-          const customValues = {
-            nombreAplicacion: 'mi-aplicacion',
-            nombreImagen: `localhost:5000/${nombreCompletoImagen}`,
-            etiquetaImagen: '1.0.0',
-            replicas: 2,
-          };
-
-
-          this.construirArchivoValues(customValues)
-        });
-      });
-    })
-
-  }
-
-  async construirArchivoValues(customValues: any) {
+  async updateExperiment(id: number, cambios: UpdateExperimentoDto) {
     try {
-      // Convertir los valores personalizados a YAML
-      const yamlContent = yaml.dump(customValues);
+      const experiment = await this.experimentoRepo.findOneBy({ id_experimento: id });
+      // if (cambios.fk_estadoU) {
+      //     const estado = await this.estadoUsuarioService.findOne(
+      //         cambios.fk_estadoU,
+      //     );
+      //     user.estadoUsuario = estado;
+      // }
 
-      // Escribir los valores personalizados en un archivo YAML
-      fs.writeFileSync('values.yaml', yamlContent, 'utf8');
-
-      // Ejecutar Helm con los valores personalizados
-      const helmCommand = `helm install mywebapp-release3-4-2 C:/Users/maure/Desktop/templates-deployment --values values.yaml`;
-      
-      //** CONTRUIR METODO UPDATE */
-      // const helmCommand = `helm upgrade mywebapp-release-4 C:/Users/maure/Desktop/templates-deployment --values values.yaml`;
-      exec(helmCommand, (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error al ejecutar Helm: ${error}`);
-          return;
-        }
-        console.log(`Despliegue exitoso: ${stdout}`);
-      });
+      this.experimentoRepo.merge(experiment, cambios);
+      return this.experimentoRepo.save(experiment);
     } catch (error) {
-      console.error(`Error al crear valores personalizados: ${error}`);
+      console.error(error);
+      throw new InternalServerErrorException(
+        `Problemas actualizando el experimento: ${error}`,
+      );
     }
   }
 
+  removeExperiment(id: number) {
+    return this.experimentoRepo.delete(id);
+  }
+
+  private async executeCommand(command: string): Promise<{ stdout: string, stderr: string }> {
+    return new Promise((resolve, reject) => {
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve({ stdout, stderr });
+        }
+      });
+    });
+  }
 }

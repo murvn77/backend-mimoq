@@ -1,15 +1,23 @@
+/** NestJS */
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+/** Dtos */
 import { CreateDeploymentDto, UpdateDeploymentDto } from 'src/proyecto/dtos/despliegue.dto';
+
+/** Entities */
 import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
-import { Repository, EntityManager } from 'typeorm';
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import simpleGit from 'simple-git';
-import { ProyectoService } from '../proyecto/proyecto.service';
-import { exec } from 'child_process';
 import { Proyecto } from 'src/proyecto/entities/proyecto.entity';
+
+/** Services */
+import { ProyectoService } from '../proyecto/proyecto.service';
+
+/** Utils */
+import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
+import { exec } from 'child_process';
+import simpleGit from 'simple-git';
 
 @Injectable()
 export class DespliegueService {
@@ -65,13 +73,16 @@ export class DespliegueService {
       throw new InternalServerErrorException(`Este despliegue ya está registrado en la base de datos`);
     }
 
-    const tempDir = `./temp-repo-${Date.now()}`;
+    const tempDir = `./utils/temp-repo-${Date.now()}`;
     await this.cloneRepository(proyecto.url_proyecto, tempDir);
+
     const despliegueExitoso = await this.buildAndPushImage(proyecto, data, tempDir);
 
     if (!despliegueExitoso) {
       throw new InternalServerErrorException(`No se pudo realizar el despliegue`);
     }
+
+    await fs.remove(tempDir);
 
     const newDeployment = this.despliegueRepo.create(data);
     newDeployment.proyecto = proyecto;
@@ -136,8 +147,6 @@ export class DespliegueService {
         tag: `${data.tag_img}`,
       };
 
-      // await fs.remove(tempDir);
-
       this.nombreDespliegue = customValues.appName;
 
       return await this.construirArchivoValues(proyecto.titulo, customValues);
@@ -149,18 +158,19 @@ export class DespliegueService {
 
   private async construirArchivoValues(nombre_app: string, customValues: any): Promise<boolean> {
     try {
+      const dirValues = `./utils/values.yaml`;
       const yamlContent = yaml.dump(customValues);
-      fs.writeFileSync('values.yaml', yamlContent, 'utf8');
+      fs.writeFileSync(dirValues, yamlContent, 'utf8');
 
       const nombreApp = `${nombre_app.toLowerCase().replace(/\s/g, '-')}`;
       console.log('Nombre de la aplicación para despliegue:', nombreApp);
 
-      const helmCommand = `helm install ${nombreApp} C:/Users/maure/Desktop/templates-deployment --values values.yaml`;
+      const helmCommand = `helm install ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
 
       return await new Promise<boolean>((resolve, reject) => {
         exec(helmCommand, async (error, stdout) => {
           if (error) {
-            const helmUpdateCommand = `helm upgrade ${nombreApp} C:/Users/maure/Desktop/templates-deployment --values values.yaml`;
+            const helmUpdateCommand = `helm upgrade ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
             exec(helmUpdateCommand, (updateError, updateStdout) => {
               if (updateError) {
                 console.error(`Error al ejecutar actualización de Helm: ${updateError.message}`);

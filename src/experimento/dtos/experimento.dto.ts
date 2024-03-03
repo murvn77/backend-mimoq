@@ -1,18 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 
 import {
+  IsArray,
   IsNotEmpty,
   IsNumber,
   IsPositive,
   IsString,
 } from 'class-validator';
-
-// Experimento = carga ?
 export class CreateExperimentoDto {
-  @IsNotEmpty()
-  @IsString()
-  @ApiProperty()
-  readonly url_proyecto: string;
   @IsNotEmpty()
   @IsNumber()
   @IsPositive()
@@ -23,4 +18,15 @@ export class CreateExperimentoDto {
   @IsPositive()
   @ApiProperty()
   readonly cantidad_usuarios: number;
+  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
+  @ApiProperty()
+  readonly cantidad_replicas: number;
+  @IsNotEmpty()
+  @IsArray()
+  @ApiProperty()
+  readonly endpoints: string[];
 }
+
+export class UpdateExperimentoDto extends PartialType(CreateExperimentoDto) {}

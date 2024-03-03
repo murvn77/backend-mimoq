@@ -6,10 +6,10 @@ export class Despliegue {
     @PrimaryGeneratedColumn()
     id_despliegue: number;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'integer' })
     cant_replicas: number;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'integer' })
     cant_pods: number;
 
     @Column({ type: 'varchar', length: 100 })

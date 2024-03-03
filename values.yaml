@@ -1,4 +1,4 @@
-appName: proyecto-de-graphql-y-docker
-cantReplicas: '2'
-name: localhost:5000/qwer/asdf:123
-tag: '123'
+appName: proyecto-de-docker-con-graphql
+cantReplicas: '1'
+name: localhost:5000/kathe/graphql:1.0.0
+tag: 1.0.0

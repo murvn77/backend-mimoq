@@ -2,13 +2,13 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsuarioModule } from './usuario/usuario.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseModule } from './database/database.module';
 import { ConfigModule } from '@nestjs/config';
 import config from './config';
 import * as Joi from 'joi';
 import { MetricaModule } from './metrica/metrica.module';
 import { ProyectoModule } from './proyecto/proyecto.module';
+import { ExperimentoModule } from './experimento/experimento.module';
 
 @Module({
   imports: [
@@ -27,7 +27,8 @@ import { ProyectoModule } from './proyecto/proyecto.module';
     DatabaseModule,
     UsuarioModule,
     MetricaModule,
-    ProyectoModule
+    ProyectoModule,
+    ExperimentoModule
   ],
   controllers: [AppController],
   providers: [AppService],
