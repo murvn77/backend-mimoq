@@ -28,8 +28,14 @@ export class DespliegueController {
   @Post()
   createDeployment(@Body() payload: CreateDeploymentDto) {
     console.log('Body en controller', payload);
-    return this.despliegueService.createDeployment(payload);
+    return this.despliegueService.validateProjectToDeploy(payload);
   }
+
+  // @Post()
+  // createMultipleDeployment(@Body() payload: CreateDeploymentDto) {
+  //   console.log('Body en controller', payload);
+  //   return this.despliegueService.createMultipleDeployment(payload);
+  // }
 
   @Put(':id')
   updateDeployment(

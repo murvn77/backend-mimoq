@@ -7,16 +7,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Proyecto } from './entities/proyecto.entity';
 import { Despliegue } from './entities/despliegue.entity';
 import { UsuarioModule } from 'src/usuario/usuario.module';
+import { UsuarioService } from 'src/usuario/services/usuario/usuario.service';
+import { Usuario } from 'src/usuario/entities/usuario.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Proyecto,
-      Despliegue
-    ]),
-    UsuarioModule,
-  ],
-  providers: [ProyectoService, DespliegueService],
+  imports: [TypeOrmModule.forFeature([Usuario, Proyecto, Despliegue])],
+  providers: [ProyectoService, DespliegueService, UsuarioService],
   controllers: [ProyectoController, DespliegueController],
 })
-export class ProyectoModule {}
+export class ProyectoModule { }

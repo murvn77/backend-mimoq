@@ -6,10 +6,10 @@ export class Despliegue {
     @PrimaryGeneratedColumn()
     id_despliegue: number;
 
-    @Column({ type: 'integer' })
+    @Column({ type: 'integer', nullable: true })
     cant_replicas: number;
 
-    @Column({ type: 'integer' })
+    @Column({ type: 'integer', nullable: true })
     cant_pods: number;
 
     @Column({ type: 'varchar', length: 100 })
@@ -23,7 +23,7 @@ export class Despliegue {
 
     @Column({ type: 'varchar', length: 100 })
     tag_img: string;
-    
+
     @Column({ type: 'varchar', length: 100 })
     label_despliegue_k8s: string;
 

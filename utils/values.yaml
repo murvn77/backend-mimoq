@@ -1,4 +1,0 @@
-appName: proyecto-de-docker-con-graphql
-cantReplicas: '1'
-name: localhost:5000/sanjeevkt720/prometheus-demo
-tag: string

@@ -16,6 +16,12 @@ export class Proyecto {
     @Column({ type: 'varchar', length: 100 })
     url_proyecto: string;
 
+    @Column({ type: 'boolean', nullable: true })
+    docker_compose: boolean;
+
+    @Column({ type: 'boolean', nullable: true })
+    dockerfile: boolean;
+
     @ManyToOne(() => Usuario, (usuario) => usuario.proyectos)
     @JoinColumn({ name: 'fk_usuario' })
     usuario: Usuario;
