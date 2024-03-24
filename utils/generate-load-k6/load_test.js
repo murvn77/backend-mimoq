@@ -31,8 +31,8 @@ export const options = {
 const requestSucceed = new Counter("number_of_requests_succeded");
 const requestFail = new Counter("number_of_requests_failed");
 export default function () {
-  for (let i = 0; i < ENDPOINTS.length; i++) {
-    const endpoint = ENDPOINTS[i];
+  for (const element of ENDPOINTS) {
+    const endpoint = element;
     const res = http.get(BASE_URL + endpoint);
     check(res, {
       "is status 200": (r) => r.status === 200,

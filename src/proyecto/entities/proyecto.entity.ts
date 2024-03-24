@@ -13,8 +13,17 @@ export class Proyecto {
     @Column({ type: 'varchar', length: 100 })
     descripcion: string;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'varchar', length: 100, nullable: true})
     url_proyecto: string;
+
+    // @Column({ type: 'varchar', length: 100, nullable: false})
+    // tipo: string; --- Individual o multiple
+
+    @Column('varchar', { array: true, nullable: true })    
+    urls_proyecto: string[];
+
+    @Column('varchar', { array: true, nullable: true })    
+    nombres_proyecto: string[];
 
     @Column({ type: 'boolean', nullable: true })
     docker_compose: boolean;

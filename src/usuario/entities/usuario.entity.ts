@@ -1,5 +1,6 @@
 import { Proyecto } from 'src/proyecto/entities/proyecto.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { RolUsuario } from './rol-usuario.entity';
 
 @Entity()
 export class Usuario {
@@ -17,6 +18,12 @@ export class Usuario {
 
     @Column({ type: 'varchar', length: 100 })
     contrasena: string;
+
+    @ManyToOne(() => RolUsuario, (rol_usuario) => rol_usuario.usuarios, {
+        nullable: false,
+    })
+    @JoinColumn({ name: 'fk_id_rol_usuario' })
+    rol: RolUsuario;
 
     @OneToMany(() => Proyecto, (proyecto) => proyecto.usuario)
     proyectos: Proyecto[];

@@ -9,11 +9,13 @@ import * as Joi from 'joi';
 import { MetricaModule } from './metrica/metrica.module';
 import { ProyectoModule } from './proyecto/proyecto.module';
 import { ExperimentoModule } from './experimento/experimento.module';
+import { AuthModule } from './auth/auth.module';
+import { enviroments } from './enviroments';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      // envFilePath: enviroments[process.env.NODE_ENV] || '.prod.env',
+      envFilePath: enviroments[process.env.NODE_ENV] || '.dev.env',
       load: [config],
       isGlobal: true,
       validationSchema: Joi.object({
@@ -28,7 +30,8 @@ import { ExperimentoModule } from './experimento/experimento.module';
     UsuarioModule,
     MetricaModule,
     ProyectoModule,
-    ExperimentoModule
+    ExperimentoModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

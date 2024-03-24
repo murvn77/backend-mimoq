@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
+import { Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { DespliegueExperimento } from './despliegue-experimento.entity';
 
 @Entity()
 export class Experimento {
@@ -16,4 +18,10 @@ export class Experimento {
 
     @Column({ type: 'varchar', length: 100 })
     readonly endpoints: string[];
+
+    @OneToMany(
+        () => DespliegueExperimento,
+        (despliegueExperimento) => despliegueExperimento.experimento,
+    )
+    despliegueExperimentos: DespliegueExperimento[];
 }

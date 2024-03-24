@@ -1,9 +1,11 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 
 import {
+  IsArray,
   IsBoolean,
     IsNotEmpty,
     IsNumber,
+    IsOptional,
     IsPositive,
     IsString,
 } from 'class-validator';
@@ -17,15 +19,23 @@ export class CreateProjectDto {
     @IsString()
     @ApiProperty()
     readonly descripcion: string;
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     @ApiProperty()
     readonly url_proyecto: string;
-    @IsNotEmpty()
+    @IsOptional()
+    @IsArray()
+    @ApiProperty()
+    readonly urls_proyecto: string[];
+    @IsOptional()
+    @IsArray()
+    @ApiProperty()
+    readonly nombres_proyecto: string[];
+    @IsOptional()
     @IsBoolean()
     @ApiProperty()
     readonly docker_compose: boolean;
-    @IsNotEmpty()
+    @IsOptional()
     @IsBoolean()
     @ApiProperty()
     readonly dockerfile: boolean;

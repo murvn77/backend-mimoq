@@ -1,24 +1,24 @@
-import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { Usuario } from 'src/usuario/entities/usuario.entity';
 import { Repository } from 'typeorm';
 import { CreateUsuarioDto, UpdateUsuarioDto } from 'src/usuario/dtos/usuario.dto';
 
 import * as bcrypt from 'bcrypt';
-import config from 'src/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { RolUsuarioService } from 'src/usuario/services/rol-usuario/rol-usuario.service';
 
 @Injectable()
 export class UsuarioService {
     constructor(
         @InjectRepository(Usuario)
         private usuarioRepo: Repository<Usuario>,
+        private rolUsuarioService: RolUsuarioService,
     ) { }
-
 
     async findAll() {
         try {
             return await this.usuarioRepo.find({
-                // relations: ['rol', 'perfil', 'estadoUsuario'],
+                relations: ['proyectos', 'proyectos.despliegues'],
             });
         } catch (error) {
             console.error(error);
@@ -30,7 +30,10 @@ export class UsuarioService {
 
     async findOne(id: number) {
         try {
-            const user = await this.usuarioRepo.findOneBy({id_usuario: id});
+            const user = await this.usuarioRepo.findOne({
+                where: { id_usuario: id },
+                relations: ['proyectos', 'proyectos.despliegues'],
+            });
             if (!(user instanceof Usuario)) {
                 throw new NotFoundException(
                     `Usuario con id #${id} no se encuentra en la Base de Datos`,
@@ -49,7 +52,7 @@ export class UsuarioService {
         try {
             const user = await this.usuarioRepo.findOne({
                 where: { correo: correo_cor },
-                // relations: ['pais', 'rol', 'estadoUsuario'],
+                relations: ['rol', 'proyectos', 'proyectos.despliegues'],
             });
             return user;
         } catch (error) {
@@ -59,27 +62,6 @@ export class UsuarioService {
             );
         }
     }
-
-
-    //   async findUserProjects(id: number) {
-    //     try {
-    //       const user = await this.usuarioRepo.findOne(id, {
-    //         relations: ['usuarioProyecto', 'usuarioProyecto.proyecto','usuarioProyecto.proyecto.estado_proyecto'],
-    //       });
-
-    //       if (!user) {
-    //         throw new NotFoundException(
-    //           `El usuario con id #${id} no se encuentra en la Base de Datos`,
-    //         );
-    //       }
-    //       return user;
-    //     } catch (error) {
-    //       console.error(error);
-    //       throw new InternalServerErrorException(
-    //         `Problemas encontrando los proyectos del usuario: ${error}`,
-    //       );
-    //     }
-    //   }
 
     async createUser(data: CreateUsuarioDto) {
         try {
@@ -93,10 +75,10 @@ export class UsuarioService {
             const hashPassword = await bcrypt.hash(newUser.contrasena, 10);
             newUser.contrasena = hashPassword;
 
-            // if (data.fk_estadoU) {
-            //     const estado = await this.estadoUsuarioService.findOne(data.fk_estadoU);
-            //     newUser.estadoUsuario = estado;
-            // }
+            if (data.fk_rol_usuario) {
+                const rol = await this.rolUsuarioService.findOne(data.fk_rol_usuario);
+                newUser.rol = rol;
+            }
 
             return this.usuarioRepo.save(newUser);
         } catch (error) {
@@ -107,16 +89,13 @@ export class UsuarioService {
         }
     }
 
-    async update(id: number, cambios: UpdateUsuarioDto) {
+    async updateUser(id: number, cambios: UpdateUsuarioDto) {
         try {
-            const user = await this.usuarioRepo.findOneBy({id_usuario: id});
-            // if (cambios.fk_estadoU) {
-            //     const estado = await this.estadoUsuarioService.findOne(
-            //         cambios.fk_estadoU,
-            //     );
-            //     user.estadoUsuario = estado;
-            // }
-
+            const user = await this.usuarioRepo.findOneBy({ id_usuario: id });
+            if (cambios.fk_rol_usuario) {
+                const rol = await this.rolUsuarioService.findOne(cambios.fk_rol_usuario);
+                user.rol = rol;
+            }
             this.usuarioRepo.merge(user, cambios);
             return this.usuarioRepo.save(user);
         } catch (error) {
@@ -128,7 +107,7 @@ export class UsuarioService {
     }
 
     async updatePassword(id: number, psdActual: string, psdNew: string) {
-        const user = await this.usuarioRepo.findOneBy({id_usuario: id});
+        const user = await this.usuarioRepo.findOneBy({ id_usuario: id });
         if (!(user instanceof Usuario)) {
             throw new NotFoundException(
                 `Usuario no encontrado para actualizar contraseña`,
@@ -146,7 +125,7 @@ export class UsuarioService {
     }
 
 
-    remove(id: number) {
+    removeUser(id: number) {
         return this.usuarioRepo.delete(id);
     }
 }

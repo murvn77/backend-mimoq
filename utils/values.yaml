@@ -1,0 +1,8 @@
+appName: spring-petclinic-vets-service
+namespace: default
+cantReplicas: '1'
+tag: 1.0.0
+portExpose: '8083'
+nodePort: '30702'
+image:
+  name: springcommunity/spring-petclinic-vets-service

@@ -16,13 +16,14 @@ import config from '../config';
           type: 'postgres',
           host,
           database: name,
-          // schema,
           username: user,
           password,
           port,
           synchronize: true,
           autoLoadEntities: true,
-          //entities: ["src/**/*.entity.ts"],
+          ssl: {
+            rejectUnauthorized: false,
+          },
         };
       },
     }),

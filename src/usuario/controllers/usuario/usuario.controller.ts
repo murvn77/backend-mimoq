@@ -25,13 +25,6 @@ export class UsuarioController {
         return this.usuarioService.findOneByEmail(correo_usuario);
     }
 
-    //   @Get(':id/proyectos')
-    //   findProjectsByUser(@Param('id', ParseIntPipe) id: number) {
-    //     return this.usuarioService.findUserProjects(id);
-    //   }
-
-
-    // @Roles(Role.LIDER, Role.COORDINADOR)
     @Post()
     createUsuario(@Body() payload: CreateUsuarioDto) {
         console.log('Body en controller', payload);
@@ -48,15 +41,15 @@ export class UsuarioController {
     }
 
     @Put(':id')
-    update(
+    updateUser(
         @Param('id', ParseIntPipe) id: number,
         @Body() payload: UpdateUsuarioDto,
     ) {
-        return this.usuarioService.update(id, payload);
+        return this.usuarioService.updateUser(id, payload);
     }
 
     @Delete(':id')
-    remove(@Param('id', ParseIntPipe) id: number) {
-        return this.usuarioService.remove(id);
+    removeUser(@Param('id', ParseIntPipe) id: number) {
+        return this.usuarioService.removeUser(id);
     }
 }

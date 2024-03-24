@@ -4,7 +4,8 @@ import {
     IsNotEmpty,
     IsString,
     IsNumber,
-    IsPositive
+    IsPositive,
+    IsOptional
 } from 'class-validator';
 
 export class CreateDeploymentDto {
@@ -30,7 +31,7 @@ export class CreateDeploymentDto {
     @IsString()
     @ApiProperty()
     readonly nombre_img: string;
-    // @IsNotEmpty()
+    @IsOptional()
     @IsString()
     @ApiProperty()
     readonly tag_img: string;

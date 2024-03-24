@@ -27,13 +27,16 @@ export class ProyectoService {
 
   async findOne(id: number) {
     try {
-      const proyecto = await this.proyectoRepo.findOneBy({ id_proyecto: id });
-      if (!(proyecto instanceof Proyecto)) {
+      const project = await this.proyectoRepo.findOne({
+        where: { id_proyecto: id },
+        relations: ['despliegues']
+      });
+      if (!(project instanceof Proyecto)) {
         throw new NotFoundException(
           `Proyecto con id #${id} no se encuentra en la Base de Datos`,
         );
       }
-      return proyecto;
+      return project;
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
@@ -45,26 +48,26 @@ export class ProyectoService {
   async findOneByUrlProject(url_proyecto: string) {
     try {
       const project = await this.proyectoRepo.findOne({
-        where: { url_proyecto: url_proyecto }
+        where: { url_proyecto: url_proyecto },
+        relations: ['despliegues']
       });
-
       return project;
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
-        `Problemas encontrando el proyecto dado el correo: ${error}`,
+        `Problemas encontrando el proyecto dada la url: ${error}`,
       );
     }
   }
 
   async createProject(data: CreateProjectDto) {
     try {
-      const projectExists = await this.findOneByUrlProject(data.url_proyecto);
-      if (projectExists instanceof Proyecto) {
-        throw new InternalServerErrorException(
-          `Este proyecto  ya se encuentra registrado en la BD`,
-        );
-      }
+      // const projectExists = await this.findOneByUrlProject(data.url_proyecto);
+      // if (projectExists instanceof Proyecto) {
+      //   throw new InternalServerErrorException(
+      //     `Este proyecto ya se encuentra registrado en la BD`,
+      //   );
+      // }
       const newProject = this.proyectoRepo.create(data);
 
       if (data.fk_usuario) {
@@ -84,6 +87,11 @@ export class ProyectoService {
   async updateProject(id: number, cambios: UpdateProjectDto) {
     try {
       const proyecto = await this.proyectoRepo.findOneBy({ id_proyecto: id });
+
+      if (cambios.fk_usuario) {
+        const user = await this.usuarioService.findOne(cambios.fk_usuario);
+        proyecto.usuario = user;
+      }
 
       this.proyectoRepo.merge(proyecto, cambios);
       return this.proyectoRepo.save(proyecto);

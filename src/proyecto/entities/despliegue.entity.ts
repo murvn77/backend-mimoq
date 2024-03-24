@@ -1,5 +1,7 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Proyecto } from './proyecto.entity';
+import { Experimento } from 'src/experimento/entities/experimento.entity';
+import { DespliegueExperimento } from 'src/experimento/entities/despliegue-experimento.entity';
 
 @Entity()
 export class Despliegue {
@@ -21,14 +23,22 @@ export class Despliegue {
     @Column({ type: 'varchar', length: 100 })
     nombre_img: string;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'varchar', length: 100, nullable: true })
     tag_img: string;
 
     @Column({ type: 'varchar', length: 100 })
     label_despliegue_k8s: string;
 
+    @Column({ type: 'integer' })
+    puerto: number;
 
     @ManyToOne(() => Proyecto, (proyecto) => proyecto.despliegues)
     @JoinColumn({ name: 'fk_proyecto' })
     proyecto: Proyecto;
+
+    @OneToMany(
+        () => DespliegueExperimento,
+        (despliegueExperimento) => despliegueExperimento.despliegue,
+    )
+    despliegueExperimentos: DespliegueExperimento[];
 }

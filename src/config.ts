@@ -11,5 +11,6 @@ export default registerAs('config', () => {
       password: process.env.PG_PASSWORD,
       port: parseInt(process.env.PG_PORT, 10),
     },
+    jwtSecret: process.env.JWT_SECRET,
   };
 });
