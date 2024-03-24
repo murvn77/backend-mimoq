@@ -20,10 +20,8 @@ export class RolesGuard implements CanActivate {
     if (!roles) {
       return true;
     }
-    // ['admin', 'cliente'];
     const request = context.switchToHttp().getRequest();
     const usuario = request.user as PayloadToken;
-    // { role: 'admin', sub: 1212 }
     const isAuth = roles.some((role) => role === usuario.role);
     if (!isAuth) {
       throw new UnauthorizedException('su rol no esta autorizado');
