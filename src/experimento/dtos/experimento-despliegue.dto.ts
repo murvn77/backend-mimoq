@@ -6,7 +6,7 @@ import {
     IsPositive,
 } from 'class-validator';
 
-export class CreateDespliegueExperimentoDto {
+export class CreateExperimentoDespliegueDto {
     @IsNotEmpty({ message: 'La fk del experimento es obligatoria' })
     @IsNumber()
     @IsPositive()
@@ -17,6 +17,11 @@ export class CreateDespliegueExperimentoDto {
     @IsPositive()
     @ApiProperty()
     readonly fk_id_despliegue: number;
+    @IsNotEmpty()
+    @IsNumber()
+    @IsPositive()
+    @ApiProperty()
+    readonly cantidad_replicas: number;
 }
 
-export class UpdateDespliegueExperimentoDto extends PartialType(CreateDespliegueExperimentoDto) { }
+export class UpdateExperimentoDespliegueDto extends PartialType(CreateExperimentoDespliegueDto) { }

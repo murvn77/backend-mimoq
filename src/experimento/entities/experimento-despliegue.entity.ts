@@ -1,4 +1,5 @@
 import {
+    Column,
     Entity,
     JoinColumn,
     ManyToOne,
@@ -8,9 +9,9 @@ import { Experimento } from './experimento.entity';
 import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
 
 @Entity()
-export class DespliegueExperimento {
+export class ExperimentoDespliegue {
     @PrimaryGeneratedColumn()
-    id_despliegue_experimento: number;
+    id_experimento_despliegue: number;
 
     @ManyToOne(() => Experimento, (experimento) => experimento.despliegueExperimentos)
     @JoinColumn({ name: 'fk_id_experimento' })
@@ -19,4 +20,10 @@ export class DespliegueExperimento {
     @ManyToOne(() => Despliegue, (despliegue) => despliegue.despliegueExperimentos)
     @JoinColumn({ name: 'fk_id_despliegue' })
     despliegue: Despliegue;
+
+    @Column({ type: 'integer' })
+    cantidad_replicas: number;
+
+    @Column({ type: 'text', nullable: true })
+    resultado: string[];
 }

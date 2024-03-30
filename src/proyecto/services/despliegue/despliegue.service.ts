@@ -79,55 +79,44 @@ export class DespliegueService {
   }
 
   /** Construcción de archivo "Values" para Helm */
-  async construirArchivoValues(nombreApp: string, customValues: any): Promise<boolean> {
+  async deployApp(yamlValues: any): Promise<boolean> {
     try {
-      console.log('NOMBRE IMAGE: ', customValues.name);
+        console.log('DATA VALUES YAML: ', yamlValues);
 
-      // Agregar la clave 'image' al objeto customValues
-      const image = {
-        name: customValues.name,
-      };
-      customValues.image = image;
-      delete customValues.name;
+        // Escribir el archivo YAML
+        const dirValues = `./utils/values.yaml`;
+        fs.writeFileSync(dirValues, yamlValues, 'utf8');
 
-      console.log('NOMBRE CUSTOM VALUES: ', customValues.image);
+        console.log('Nombre de la aplicación para despliegue: test1');
 
-      // Generar el contenido YAML
-      const yamlContent = yaml.dump(customValues);
+        const helmCommand = `helm install test2 ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
 
-      // Escribir el archivo YAML
-      const dirValues = `./utils/values.yaml`;
-      fs.writeFileSync(dirValues, yamlContent, 'utf8');
-
-      console.log('Nombre de la aplicación para despliegue:', nombreApp);
-
-      const helmCommand = `helm install ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
-
-      return await new Promise<boolean>((resolve, reject) => {
-        exec(helmCommand, async (error, stdout) => {
-          if (error) {
-            console.error(`Error al ejecutar creación de Helm: ${error.message}`);
-            const helmUpdateCommand = `helm upgrade ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
-            exec(helmUpdateCommand, (updateError, updateStdout) => {
-              if (updateError) {
-                console.error(`Error al ejecutar actualización de Helm: ${updateError.message}`);
-                resolve(false);
-              } else {
-                console.log(`Despliegue exitoso: ${updateStdout}`);
-                resolve(true);
-              }
+        return await new Promise<boolean>((resolve, reject) => {
+            exec(helmCommand, async (error, stdout) => {
+                if (error) {
+                    console.error(`Error al ejecutar creación de Helm: ${error.message}`);
+                    const helmUpdateCommand = `helm upgrade test2 ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
+                    exec(helmUpdateCommand, (updateError, updateStdout) => {
+                        if (updateError) {
+                            console.error(`Error al ejecutar actualización de Helm: ${updateError.message}`);
+                            resolve(false);
+                        } else {
+                            console.log(`Despliegue exitoso: ${updateStdout}`);
+                            resolve(true);
+                        }
+                    });
+                } else {
+                    console.log(`Despliegue exitoso: ${stdout}`);
+                    resolve(true);
+                }
             });
-          } else {
-            console.log(`Despliegue exitoso: ${stdout}`);
-            resolve(true);
-          }
         });
-      });
+
     } catch (error) {
-      console.error(`Error en construirArchivoValues: ${error.message}`);
-      return false;
+        console.error(`Error en construirArchivoValues: ${error.message}`);
+        return false;
     }
-  }
+}
 
   /** Clonar el repositorio */
   async cloneRepository(url: string, tempDir: string) {

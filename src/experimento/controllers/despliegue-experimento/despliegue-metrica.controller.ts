@@ -1,18 +1,18 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { DespliegueExperimentoService } from '../../services/despliegue-experimento/despliegue-experimento.service';
-import { CreateDespliegueExperimentoDto } from 'src/experimento/dtos/despliegue-experimento.dto';
+import { CreateExperimentoDespliegueDto } from 'src/experimento/dtos/experimento-despliegue.dto';
+import { ExperimentoDespliegueService } from 'src/experimento/services/experimento-despliegue/experimento-despliegue.service';
 
 @ApiTags('Despliegue experimento')
 @Controller('despliegue-experimento')
 export class DespliegueExperimentoController {
     constructor(
-        private despliegueExperimentoService: DespliegueExperimentoService,
+        private experimentoDespliegueService: ExperimentoDespliegueService,
     ) { }
 
     @Get()
     findAll() {
-        return this.despliegueExperimentoService.findAll();
+        return this.experimentoDespliegueService.findAll();
     }
 
     // @Get(':id')
@@ -21,9 +21,9 @@ export class DespliegueExperimentoController {
     // }
 
     @Post()
-    createUsuario(@Body() payload: CreateDespliegueExperimentoDto) {
+    createDeploymentExperiment(@Body() payload: CreateExperimentoDespliegueDto) {
         console.log('Body en controller', payload);
-        return this.despliegueExperimentoService.createDeploymentExperiment(payload);
+        return this.experimentoDespliegueService.createDeploymentExperiment(payload);
     }
 
     // @Put(':id')

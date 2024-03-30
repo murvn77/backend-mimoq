@@ -1,15 +1,17 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Proyecto } from './proyecto.entity';
-import { Experimento } from 'src/experimento/entities/experimento.entity';
-import { DespliegueExperimento } from 'src/experimento/entities/despliegue-experimento.entity';
+import { ExperimentoDespliegue } from 'src/experimento/entities/experimento-despliegue.entity';
 
 @Entity()
 export class Despliegue {
     @PrimaryGeneratedColumn()
     id_despliegue: number;
 
+    // @Column('integer', { array: true, nullable: true })    
+    // cant_replicas: number[];
+
     @Column({ type: 'integer', nullable: true })
-    cant_replicas: number;
+    replicas: number;
 
     @Column({ type: 'integer', nullable: true })
     cant_pods: number;
@@ -37,8 +39,8 @@ export class Despliegue {
     proyecto: Proyecto;
 
     @OneToMany(
-        () => DespliegueExperimento,
-        (despliegueExperimento) => despliegueExperimento.despliegue,
+        () => ExperimentoDespliegue,
+        (experimentoDespliegue) => experimentoDespliegue.despliegue,
     )
-    despliegueExperimentos: DespliegueExperimento[];
+    despliegueExperimentos: ExperimentoDespliegue[];
 }

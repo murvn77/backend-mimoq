@@ -22,8 +22,9 @@ import { DespliegueService } from '../despliegue/despliegue.service';
 /** Repositorio que tiene sólo un microservicio */
 @Injectable()
 export class DespliegueIndividualService {
-    private nombreDespliegue: string;
-    private puertoDespliegue: number;
+    private nombresDespliegues: string[] = [];
+    private puertosDespliegues: number[] = [];
+    private puertosExposeApps: number[] = [];
 
     constructor(
         @InjectRepository(Despliegue)
@@ -41,7 +42,7 @@ export class DespliegueIndividualService {
 
         const existingDeployment = await this.despliegueRepo.findOne({
             where: {
-                cant_replicas: data.cant_replicas,
+                // cant_replicas: data.cant_replicas,
                 cant_pods: data.cant_pods,
                 nombre_namespace: data.nombre_namespace,
                 usuario_img: data.usuario_img,
@@ -58,34 +59,8 @@ export class DespliegueIndividualService {
         for (let i = 0; i < proyecto.urls_proyecto.length; i++) {
             const tempDir = `./utils/temp-repo-${Date.now()}`;
             await this.despliegueUtilsService.cloneRepository(proyecto.urls_proyecto[i], tempDir);
-            await this.createIndividualDeployment(proyecto, data, tempDir, i);
-        }
-    }
 
-    async createIndividualDeployment(proyecto: Proyecto, data: CreateDeploymentDto, tempDir: string, index: number) {
-        const despliegueExitoso = await this.buildAndPushImage(proyecto, data, tempDir, index);
-
-        if (!despliegueExitoso) {
-            throw new InternalServerErrorException(`No se pudo realizar el despliegue`);
-        }
-
-        const newDeployment = this.despliegueRepo.create(data);
-        newDeployment.proyecto = proyecto;
-        newDeployment.puerto = this.puertoDespliegue;
-        newDeployment.label_despliegue_k8s = this.nombreDespliegue;
-
-        try {
-            return await this.despliegueRepo.save(newDeployment);
-        } catch (error) {
-            throw new InternalServerErrorException(`Error al guardar el despliegue en la base de datos: ${error.message}`);
-        }
-    }
-
-    private async buildAndPushImage(proyecto: Proyecto, data: CreateDeploymentDto, tempDir: string, index: number): Promise<boolean> {
-        try {
-            const localRegistry = 'localhost:5000';
-
-            const nombreCompletoImagen = `${proyecto.nombres_proyecto[index].toLowerCase().replace(/\s/g, '-')}`;
+            const nombreCompletoImagen = `${proyecto.nombres_proyecto[i].toLowerCase().replace(/\s/g, '-')}`;
 
             const envMinikube = `eval $(minikube docker-env)`;
             await this.despliegueUtilsService.executeCommand(envMinikube);
@@ -95,96 +70,98 @@ export class DespliegueIndividualService {
             await this.despliegueUtilsService.executeCommand(buildCommand);
             console.log(`Imagen Docker construida correctamente`);
 
-            // const tagCommand = `docker tag ${nombreCompletoImagen} ${localRegistry}/${nombreCompletoImagen}`;
-            // await this.despliegueUtilsService.executeCommand(tagCommand);
-            // console.log(`Imagen Docker etiquetada correctamente`);
-
-            // const removeBuildCommand = `docker image rm ${nombreCompletoImagen}`;
-            // await this.despliegueUtilsService.executeCommand(removeBuildCommand);
-            // console.log(`Imagen Docker original eliminada correctamente`);
-
-            // const pushCommand = `docker push ${localRegistry}/${nombreCompletoImagen}`;
-            // await this.despliegueUtilsService.executeCommand(pushCommand);
-            // console.log(`Imagen Docker subida correctamente al registry local`);
-
             const loadImageMinikube = `minikube image load ${nombreCompletoImagen}`;
             await this.despliegueUtilsService.executeCommand(loadImageMinikube);
             console.log(`Imagen cargada en minikube correctamente`);
 
-            /** Leer el puerto expuesto del Dockerfile */
             const dockerfilePath = `${tempDir}/Dockerfile`;
             const dockerfileContent = fs.readFileSync(dockerfilePath, 'utf-8');
             const portMatch = dockerfileContent.match(/EXPOSE\s+(\d+)/);
             const port_expose = portMatch ? portMatch[1] : '';
 
-            /** Costrucción de values para helm */
-            const customValues = {
-                appName: `${nombreCompletoImagen}`,
-                namespace: `${data.nombre_namespace}`,
-                cantReplicas: `${data.cant_replicas}`,
-                name: `${nombreCompletoImagen}`,
-                tag: `${data.tag_img}`,
-                portExpose: `${port_expose}`,
-                nodePort: `${await this.despliegueUtilsService.findAvailablePort()}`
-            };
+            this.nombresDespliegues.push(nombreCompletoImagen);
+            this.puertosDespliegues.push(await this.despliegueUtilsService.findAvailablePort());
+            this.puertosExposeApps.push(port_expose);
+        }
 
-            this.nombreDespliegue = customValues.appName;
-            this.puertoDespliegue = Number(customValues.nodePort);
+        return await this.createIndividualDeployment(proyecto, data);
+    }
 
-            return await this.construirArchivoValues(customValues.appName, customValues);
-        } catch (error) {
-            console.error(`Error en buildAndPushImage: ${error.message}`);
-            return false;
+    async createIndividualDeployment(proyecto: Proyecto, data: CreateDeploymentDto) {
+        const despliegueExitoso = await this.buildAndPushImage(data);
+
+        const despliegues = [];
+
+        console.log('Despliegue: ', despliegueExitoso)
+
+        if (!despliegueExitoso) {
+            throw new InternalServerErrorException(`No se pudo realizar el despliegue`);
+        }
+
+        console.log('Guardar cada deploy...')
+
+        for (let i = 0; i < proyecto.urls_proyecto.length; i++) {
+            const newDeployment = this.despliegueRepo.create(data);
+            newDeployment.proyecto = proyecto;
+            newDeployment.puerto = this.puertosDespliegues[i];
+            newDeployment.label_despliegue_k8s = this.nombresDespliegues[i];
+            try {
+                await this.despliegueRepo.save(newDeployment)
+            } catch (error) {
+                throw new InternalServerErrorException(`Error al guardar el despliegue en la base de datos: ${error.message}`);
+            }
+            despliegues.push(newDeployment);
+        }
+
+        console.log('Despliegues: ', despliegues)
+
+        if (despliegues != undefined) {
+            return despliegues;
+        } else {
+            throw new InternalServerErrorException(`Despliegues vacíos!`);
         }
     }
 
-    /** Construcción de archivo "Values" para Helm */
-    private async construirArchivoValues(nombreApp: string, customValues: any): Promise<boolean> {
+    private async buildAndPushImage(data: CreateDeploymentDto): Promise<boolean> {
         try {
-            console.log('NOMBRE IMAGE: ', customValues.name);
+            let yamlContent = `namespace: ${data.nombre_namespace}
+image:`;
 
-            // Agregar la clave 'image' al objeto customValues
-            const image = {
-                name: customValues.name,
-            };
-            customValues.image = image;
-            delete customValues.name;
+            for (let i = 0; i < this.nombresDespliegues.length; i++) {
+                yamlContent += `
+  - name: ${this.nombresDespliegues[i]}
+    portExpose: ${this.puertosExposeApps[i]}`;
+            }
 
-            console.log('CUSTOM VALUES: ', customValues);
+            yamlContent += `
+nodePort:`;
 
-            // Generar el contenido YAML
-            const yamlContent = yaml.dump(customValues);
+            for (let i = 0; i < this.puertosDespliegues.length; i++) {
+                yamlContent += `
+  - ${this.puertosDespliegues[i]}`;
+            }
 
-            // Escribir el archivo YAML
-            const dirValues = `./utils/values.yaml`;
-            fs.writeFileSync(dirValues, yamlContent, 'utf8');
+            yamlContent += `
+appName:`;
 
-            console.log('Nombre de la aplicación para despliegue:', nombreApp);
+            for (let i = 0; i < this.nombresDespliegues.length; i++) {
+                yamlContent += `
+  - ${this.nombresDespliegues[i]}`;
+            }
 
-            const helmCommand = `helm install ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
+            yamlContent += `
+cantReplicas:`;
 
-            return await new Promise<boolean>((resolve, reject) => {
-                exec(helmCommand, async (error, stdout) => {
-                    if (error) {
-                        console.error(`Error al ejecutar creación de Helm: ${error.message}`);
-                        const helmUpdateCommand = `helm upgrade ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
-                        exec(helmUpdateCommand, (updateError, updateStdout) => {
-                            if (updateError) {
-                                console.error(`Error al ejecutar actualización de Helm: ${updateError.message}`);
-                                resolve(false);
-                            } else {
-                                console.log(`Despliegue exitoso: ${updateStdout}`);
-                                resolve(true);
-                            }
-                        });
-                    } else {
-                        console.log(`Despliegue exitoso: ${stdout}`);
-                        resolve(true);
-                    }
-                });
-            });
+            for (let i = 0; i < data.cant_replicas.length; i++) {
+                yamlContent += `
+  - ${data.cant_replicas[i]}`;
+            }            
+
+
+            console.log('YML CONTENT: ', yamlContent);
+            return await this.despliegueUtilsService.deployApp(yamlContent);
         } catch (error) {
-            console.error(`Error en construirArchivoValues: ${error.message}`);
+            console.error(`Error en buildAndPushImage: ${error.message}`);
             return false;
         }
     }

@@ -5,15 +5,15 @@ import {
     IsString,
     IsNumber,
     IsPositive,
-    IsOptional
+    IsOptional,
+    IsArray
 } from 'class-validator';
 
 export class CreateDeploymentDto {
     @IsNotEmpty()
-    @IsNumber()
-    @IsPositive()
+    @IsArray()
     @ApiProperty()
-    readonly cant_replicas: number;
+    readonly cant_replicas: number[];
     @IsNotEmpty()
     @IsNumber()
     @IsPositive()

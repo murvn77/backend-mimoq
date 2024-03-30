@@ -2,11 +2,13 @@ import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { json } from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {cors: true});
   app.setGlobalPrefix('api');
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.use(json({ limit: '50mb' }));
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

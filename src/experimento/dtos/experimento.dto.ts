@@ -19,11 +19,6 @@ export class CreateExperimentoDto {
   @ApiProperty()
   readonly cantidad_usuarios: number;
   @IsNotEmpty()
-  @IsNumber()
-  @IsPositive()
-  @ApiProperty()
-  readonly cantidad_replicas: number;
-  @IsNotEmpty()
   @IsArray()
   @ApiProperty()
   readonly endpoints: string[];

@@ -8,8 +8,8 @@ import { UsuarioService } from 'src/usuario/services/usuario/usuario.service';
 import { Usuario } from 'src/usuario/entities/usuario.entity';
 import { DespliegueIndividualService } from './services/despliegue-individual/despliegue-individual.service';
 import { DespliegueMultipleService } from './services/despliegue-multiple/despliegue-multiple.service';
-import { DespliegueExperimentoService } from 'src/experimento/services/despliegue-experimento/despliegue-experimento.service';
-import { DespliegueExperimento } from '../experimento/entities/despliegue-experimento.entity';
+import { ExperimentoDespliegueService } from 'src/experimento/services/experimento-despliegue/experimento-despliegue.service';
+import { ExperimentoDespliegue } from '../experimento/entities/experimento-despliegue.entity';
 import { Experimento } from 'src/experimento/entities/experimento.entity';
 import { ExperimentoService } from 'src/experimento/services/experimento/experimento.service';
 import { RolUsuario } from 'src/usuario/entities/rol-usuario.entity';
@@ -22,7 +22,7 @@ import { DespliegueService } from './services/despliegue/despliegue.service';
       Proyecto,
       Despliegue,
       Usuario,
-      DespliegueExperimento,
+      ExperimentoDespliegue,
       Experimento,
       RolUsuario,
     ])],
@@ -32,7 +32,7 @@ import { DespliegueService } from './services/despliegue/despliegue.service';
     DespliegueService,
     DespliegueIndividualService,
     DespliegueMultipleService,
-    DespliegueExperimentoService,
+    ExperimentoDespliegueService,
     ExperimentoService,
     RolUsuarioService
   ],

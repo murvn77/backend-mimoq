@@ -30,8 +30,9 @@ interface DockerComposeConfig {
 
 @Injectable()
 export class DespliegueMultipleService {
-    private nombreDespliegue: string;
-    private puertoDespliegue: number;
+    private nombresDespliegues: string[] = [];
+    private puertosDespliegues: number[] = [];
+    private puertosExposeApps: number[] = [];
 
     constructor(
         @InjectRepository(Despliegue)
@@ -50,7 +51,7 @@ export class DespliegueMultipleService {
 
         const existingDeployment = await this.despliegueRepo.findOne({
             where: {
-                cant_replicas: data.cant_replicas,
+                // cant_replicas: data.cant_replicas,
                 cant_pods: data.cant_pods,
                 nombre_namespace: data.nombre_namespace,
                 usuario_img: data.usuario_img,
@@ -124,9 +125,7 @@ export class DespliegueMultipleService {
     }
 
     private async pullImage(proyecto: Proyecto, imagesToBuild: any[], data: CreateDeploymentDto) {
-        const localRegistry = 'localhost:5000';
         let desplieguesRealizados: Despliegue[] = [];
-
 
         const envMinikube = `eval $(minikube docker-env)`;
         await this.despliegueUtilsService.executeCommand(envMinikube);
@@ -159,35 +158,65 @@ export class DespliegueMultipleService {
 
             const index = imageName.indexOf("/");
             let nameApp = imageName.substring(index + 1);
-
-            const customValues = {
-                appName: `${nameApp}`,
-                namespace: `${data.nombre_namespace}`,
-                cantReplicas: `${data.cant_replicas}`,
-                name: `${imageName}`,
-                tag: `${data.tag_img}`,
-                portExpose: `${container.port_expose}`,
-                nodePort: `${await this.despliegueUtilsService.findAvailablePort()}`
-            };
-
-            this.nombreDespliegue = customValues.appName;
-
             nameApp = `${nameApp.toLowerCase().replace(/\s/g, '-')}`;
-            this.puertoDespliegue = Number(customValues.nodePort);
 
-            const despliegueExitoso = await this.despliegueUtilsService.construirArchivoValues(nameApp, customValues);
+            this.nombresDespliegues.push(nameApp);
+            this.puertosDespliegues.push(await this.despliegueUtilsService.findAvailablePort());
+            this.puertosExposeApps.push(container.port_expose);
+        }
 
-            if (!despliegueExitoso) {
-                throw new InternalServerErrorException(`No se pudo realizar el despliegue`);
+        let yamlContent = `namespace: ${data.nombre_namespace}
+image:`;
+
+            for (let i = 0; i < this.nombresDespliegues.length; i++) {
+                yamlContent += `
+  - name: ${this.nombresDespliegues[i]}
+    portExpose: ${this.puertosExposeApps[i]}`;
             }
 
-            const newDeployment = this.despliegueRepo.create(data);
-            newDeployment.proyecto = proyecto;
-            newDeployment.label_despliegue_k8s = this.nombreDespliegue;
-            newDeployment.puerto = this.puertoDespliegue;
+            yamlContent += `
+nodePort:`;
 
-            desplieguesRealizados.push(newDeployment);
-        }
+            for (let i = 0; i < this.puertosDespliegues.length; i++) {
+                yamlContent += `
+  - ${this.puertosDespliegues[i]}`;
+            }
+
+            yamlContent += `
+appName:`;
+
+            for (let i = 0; i < this.nombresDespliegues.length; i++) {
+                yamlContent += `
+  - ${this.nombresDespliegues[i]}`;
+            }
+
+            yamlContent += `
+cantReplicas:`;
+
+            for (let i = 0; i < data.cant_replicas.length; i++) {
+                yamlContent += `
+  - ${data.cant_replicas[i]}`;
+            }            
+
+            console.log('YML CONTENT: ', yamlContent);
+
+            const deployment = await this.despliegueUtilsService.deployApp(yamlContent);
+
+            console.log('Llega aquí 1')
+
+            for (let i = 0; i < imagesToBuild.length; i++) {
+                const newDeployment = this.despliegueRepo.create(data);
+                newDeployment.proyecto = proyecto;
+                newDeployment.puerto = this.puertosDespliegues[i];
+                newDeployment.label_despliegue_k8s = this.nombresDespliegues[i];
+                newDeployment.replicas = data.cant_replicas[i];
+                try {
+                    await this.despliegueRepo.save(newDeployment)
+                } catch (error) {
+                    throw new InternalServerErrorException(`Error al guardar el despliegue en la base de datos: ${error.message}`);
+                }
+                desplieguesRealizados.push(newDeployment);
+            }
 
         for (const newDeployment of desplieguesRealizados) {
             try {
