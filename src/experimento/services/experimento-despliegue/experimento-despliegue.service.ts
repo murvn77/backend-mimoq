@@ -66,7 +66,7 @@ export class ExperimentoDespliegueService {
 
             let files: string[] = [];
 
-            for (let i = 0; i < data.cantidad_replicas; i++) {
+            for (let i = 1; i <= data.cantidad_replicas; i++) {
                 const out = `./utils/test-results-${i}.csv`;
                 const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS=${experiment.cantidad_usuarios} -e DURATION=${experiment.duracion}s -e ENDPOINTS="/" -e DELIMITER="," ${dirLoad}`
                 await this.executeCommand(loadCommand);

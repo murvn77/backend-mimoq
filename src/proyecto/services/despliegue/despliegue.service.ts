@@ -89,13 +89,13 @@ export class DespliegueService {
 
         console.log('Nombre de la aplicación para despliegue: test1');
 
-        const helmCommand = `helm install test2 ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
+        const helmCommand = `helm install test3 ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
 
         return await new Promise<boolean>((resolve, reject) => {
             exec(helmCommand, async (error, stdout) => {
                 if (error) {
                     console.error(`Error al ejecutar creación de Helm: ${error.message}`);
-                    const helmUpdateCommand = `helm upgrade test2 ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
+                    const helmUpdateCommand = `helm upgrade test3 ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
                     exec(helmUpdateCommand, (updateError, updateStdout) => {
                         if (updateError) {
                             console.error(`Error al ejecutar actualización de Helm: ${updateError.message}`);

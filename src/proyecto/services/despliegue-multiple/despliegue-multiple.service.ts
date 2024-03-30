@@ -37,6 +37,8 @@ export class DespliegueMultipleService {
     constructor(
         @InjectRepository(Despliegue)
         private despliegueRepo: Repository<Despliegue>,
+        @InjectRepository(Proyecto)
+        private proyectoRepo: Repository<Proyecto>,
         private despliegueUtilsService: DespliegueService,
         private proyectoService: ProyectoService,
     ) { }
@@ -164,6 +166,9 @@ export class DespliegueMultipleService {
             this.puertosDespliegues.push(await this.despliegueUtilsService.findAvailablePort());
             this.puertosExposeApps.push(container.port_expose);
         }
+
+        proyecto.nombres_proyecto = this.nombresDespliegues;
+        this.proyectoRepo.save(proyecto);
 
         let yamlContent = `namespace: ${data.nombre_namespace}
 image:`;
