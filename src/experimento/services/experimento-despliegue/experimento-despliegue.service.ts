@@ -76,7 +76,7 @@ export class ExperimentoDespliegueService {
                 files.push(contenidoCSV);
 
                 console.log('FIles...', files[i]);
-                console.log("Dizque generó carga...");
+                console.log(`Generó carga. Réplica ${i} del experimento terminada.`);
             }
 
             const newExperimentDeploy = this.experimentoDespliegueRepo.create(data);

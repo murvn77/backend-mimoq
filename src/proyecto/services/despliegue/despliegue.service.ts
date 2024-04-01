@@ -37,11 +37,11 @@ export class DespliegueService {
 
   async findOneByImage(usu_img: string, nom_img: string, tag_img: string) {
     return await this.despliegueRepo.findOne({
-      where: {
-        usuario_img: usu_img,
-        nombre_img: nom_img,
-        tag_img: tag_img,
-      }
+      // where: {
+      //   usuario_img: usu_img,
+      //   nombre_img: nom_img,
+      //   tag_img: tag_img,
+      // }
     });
   } 
   
@@ -79,7 +79,7 @@ export class DespliegueService {
   }
 
   /** Construcción de archivo "Values" para Helm */
-  async deployApp(yamlValues: any): Promise<boolean> {
+  async deployApp(nombreApp: string, yamlValues: any): Promise<boolean> {
     try {
         console.log('DATA VALUES YAML: ', yamlValues);
 
@@ -87,15 +87,15 @@ export class DespliegueService {
         const dirValues = `./utils/values.yaml`;
         fs.writeFileSync(dirValues, yamlValues, 'utf8');
 
-        console.log('Nombre de la aplicación para despliegue: test1');
+        console.log(`Nombre de la aplicación para despliegue: ${nombreApp}`);
 
-        const helmCommand = `helm install test3 ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
+        const helmCommand = `helm install ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
 
         return await new Promise<boolean>((resolve, reject) => {
             exec(helmCommand, async (error, stdout) => {
                 if (error) {
                     console.error(`Error al ejecutar creación de Helm: ${error.message}`);
-                    const helmUpdateCommand = `helm upgrade test3 ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
+                    const helmUpdateCommand = `helm upgrade ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
                     exec(helmUpdateCommand, (updateError, updateStdout) => {
                         if (updateError) {
                             console.error(`Error al ejecutar actualización de Helm: ${updateError.message}`);

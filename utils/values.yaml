@@ -5,11 +5,11 @@ image:
   - name: app-introduccion
     portExpose: 3000
 nodePort:
-  - 31377
-  - 30070
+  - 31932
+  - 31824
 appName:
   - app-graphql
   - app-introduccion
 cantReplicas:
   - 1
-  - 1
+  - 2

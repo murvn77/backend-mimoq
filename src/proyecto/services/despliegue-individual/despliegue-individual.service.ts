@@ -43,11 +43,9 @@ export class DespliegueIndividualService {
         const existingDeployment = await this.despliegueRepo.findOne({
             where: {
                 // cant_replicas: data.cant_replicas,
+                nombre: data.nombre,
                 cant_pods: data.cant_pods,
-                nombre_namespace: data.nombre_namespace,
-                usuario_img: data.usuario_img,
-                nombre_img: data.nombre_img,
-                tag_img: data.tag_img,
+                namespace: data.nombre,
                 proyecto: proyecto
             }
         });
@@ -124,7 +122,7 @@ export class DespliegueIndividualService {
 
     private async buildAndPushImage(data: CreateDeploymentDto): Promise<boolean> {
         try {
-            let yamlContent = `namespace: ${data.nombre_namespace}
+            let yamlContent = `namespace: ${data.namespace}
 image:`;
 
             for (let i = 0; i < this.nombresDespliegues.length; i++) {
@@ -159,7 +157,7 @@ cantReplicas:`;
 
 
             console.log('YML CONTENT: ', yamlContent);
-            return await this.despliegueUtilsService.deployApp(yamlContent);
+            return await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);
         } catch (error) {
             console.error(`Error en buildAndPushImage: ${error.message}`);
             return false;

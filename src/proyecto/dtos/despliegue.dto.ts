@@ -11,6 +11,10 @@ import {
 
 export class CreateDeploymentDto {
     @IsNotEmpty()
+    @IsString()
+    @ApiProperty()
+    readonly nombre: string;
+    @IsNotEmpty()
     @IsArray()
     @ApiProperty()
     readonly cant_replicas: number[];
@@ -22,19 +26,7 @@ export class CreateDeploymentDto {
     @IsNotEmpty()
     @IsString()
     @ApiProperty()
-    readonly nombre_namespace: string;
-    @IsNotEmpty()
-    @IsString()
-    @ApiProperty()
-    readonly usuario_img: string;
-    @IsNotEmpty()
-    @IsString()
-    @ApiProperty()
-    readonly nombre_img: string;
-    @IsOptional()
-    @IsString()
-    @ApiProperty()
-    readonly tag_img: string;
+    readonly namespace: string;
     @IsNotEmpty()
     @IsNumber()
     @IsPositive()

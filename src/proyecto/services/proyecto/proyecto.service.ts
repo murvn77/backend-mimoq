@@ -16,7 +16,9 @@ export class ProyectoService {
 
   async findAll() {
     try {
-      return await this.proyectoRepo.find({});
+      return await this.proyectoRepo.find({
+        relations: ['usuario']
+      });
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(

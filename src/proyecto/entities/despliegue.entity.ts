@@ -10,6 +10,9 @@ export class Despliegue {
     // @Column('integer', { array: true, nullable: true })    
     // cant_replicas: number[];
 
+    @Column({ type: 'varchar', length: 100 })
+    nombre: string;
+
     @Column({ type: 'integer', nullable: true })
     replicas: number;
 
@@ -17,16 +20,7 @@ export class Despliegue {
     cant_pods: number;
 
     @Column({ type: 'varchar', length: 100 })
-    nombre_namespace: string;
-
-    @Column({ type: 'varchar', length: 100 })
-    usuario_img: string;
-
-    @Column({ type: 'varchar', length: 100 })
-    nombre_img: string;
-
-    @Column({ type: 'varchar', length: 100, nullable: true })
-    tag_img: string;
+    namespace: string;
 
     @Column({ type: 'varchar', length: 100 })
     label_despliegue_k8s: string;
