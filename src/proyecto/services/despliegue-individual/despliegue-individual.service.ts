@@ -155,6 +155,9 @@ cantReplicas:`;
   - ${data.cant_replicas[i]}`;
             }            
 
+            this.nombresDespliegues = [];
+            this.puertosDespliegues = [];
+            this.puertosExposeApps = [];
 
             console.log('YML CONTENT: ', yamlContent);
             return await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);

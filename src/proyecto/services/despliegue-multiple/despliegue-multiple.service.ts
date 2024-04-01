@@ -30,6 +30,7 @@ interface DockerComposeConfig {
 
 @Injectable()
 export class DespliegueMultipleService {
+    private imagenesDespliegues: string[] = [];
     private nombresDespliegues: string[] = [];
     private puertosDespliegues: number[] = [];
     private puertosExposeApps: number[] = [];
@@ -145,16 +146,18 @@ export class DespliegueMultipleService {
             console.log(`Imagen cargada en minikube correctamente`);
 
             // const tagCommand = `docker tag ${imageName} ${localRegistry}/${imageName}`;
-            // await this.executeCommand(tagCommand);
+            // await this.despliegueUtilsService.executeCommand(tagCommand);
             // console.log(`Imagen Docker etiquetada correctamente`);
 
             // const removeBuildCommand = `docker image rm ${imageName}`;
-            // await this.executeCommand(removeBuildCommand);
+            // await this.despliegueUtilsService.executeCommand(removeBuildCommand);
             // console.log(`Imagen Docker original eliminada correctamente`);
 
             // const pushCommand = `docker push ${localRegistry}/${imageName}`;
             // await this.executeCommand(pushCommand);
             // console.log(`Imagen Docker subida correctamente al registry local`);
+
+            this.imagenesDespliegues.push(imageName);
 
             const index = imageName.indexOf("/");
             let nameApp = imageName.substring(index + 1);
@@ -171,9 +174,9 @@ export class DespliegueMultipleService {
         let yamlContent = `namespace: ${data.namespace}
 image:`;
 
-            for (let i = 0; i < this.nombresDespliegues.length; i++) {
+            for (let i = 0; i < this.imagenesDespliegues.length; i++) {
                 yamlContent += `
-  - name: ${this.nombresDespliegues[i]}
+  - name: ${this.imagenesDespliegues[i]}
     portExpose: ${this.puertosExposeApps[i]}`;
             }
 
@@ -201,33 +204,31 @@ cantReplicas:`;
   - ${data.cant_replicas[i]}`;
             }            
 
-            console.log('YML CONTENT: ', yamlContent);
+        console.log('YML CONTENT: ', yamlContent);
 
-            const deployment = await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);
+        const deployment = await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);
 
-            console.log('Llega aquí 1')
+        console.log('Llega aquí 1')
 
-            for (let i = 0; i < imagesToBuild.length; i++) {
-                const newDeployment = this.despliegueRepo.create(data);
-                newDeployment.proyecto = proyecto;
-                newDeployment.puerto = this.puertosDespliegues[i];
-                newDeployment.label_despliegue_k8s = this.nombresDespliegues[i];
-                newDeployment.replicas = data.cant_replicas[i];
-                try {
-                    await this.despliegueRepo.save(newDeployment)
-                } catch (error) {
-                    throw new InternalServerErrorException(`Error al guardar el despliegue en la base de datos: ${error.message}`);
-                }
-                desplieguesRealizados.push(newDeployment);
-            }
-
-        for (const newDeployment of desplieguesRealizados) {
+        for (let i = 0; i < imagesToBuild.length; i++) {
+            const newDeployment = this.despliegueRepo.create(data);
+            newDeployment.proyecto = proyecto;
+            newDeployment.puerto = this.puertosDespliegues[i];
+            newDeployment.label_despliegue_k8s = this.nombresDespliegues[i];
+            newDeployment.replicas = data.cant_replicas[i];
             try {
-                await this.despliegueRepo.save(newDeployment);
+                await this.despliegueRepo.save(newDeployment)
             } catch (error) {
                 throw new InternalServerErrorException(`Error al guardar el despliegue en la base de datos: ${error.message}`);
             }
+            desplieguesRealizados.push(newDeployment);
         }
+
+        this.imagenesDespliegues = [];
+        this.nombresDespliegues = [];
+        this.puertosDespliegues = [];
+        this.puertosExposeApps = [];
+
         console.log('Llega aquí')
         return desplieguesRealizados;
     }
