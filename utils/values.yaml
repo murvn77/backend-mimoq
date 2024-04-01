@@ -1,0 +1,45 @@
+namespace: default
+image:
+  - name: springcommunity/spring-petclinic-config-server
+    portExpose: 8888
+  - name: springcommunity/spring-petclinic-discovery-server
+    portExpose: 8761
+  - name: springcommunity/spring-petclinic-customers-service
+    portExpose: 8081
+  - name: springcommunity/spring-petclinic-visits-service
+    portExpose: 8082
+  - name: springcommunity/spring-petclinic-vets-service
+    portExpose: 8083
+  - name: springcommunity/spring-petclinic-api-gateway
+    portExpose: 8080
+  - name: openzipkin/zipkin
+    portExpose: 9411
+  - name: springcommunity/spring-petclinic-admin-server
+    portExpose: 9090
+nodePort:
+  - 32423
+  - 31871
+  - 32008
+  - 32009
+  - 32743
+  - 30921
+  - 30234
+  - 30201
+appName:
+  - spring-petclinic-config-server
+  - spring-petclinic-discovery-server
+  - spring-petclinic-customers-service
+  - spring-petclinic-visits-service
+  - spring-petclinic-vets-service
+  - spring-petclinic-api-gateway
+  - zipkin
+  - spring-petclinic-admin-server
+cantReplicas:
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
