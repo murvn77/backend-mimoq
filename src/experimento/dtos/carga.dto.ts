@@ -12,12 +12,10 @@ import {
 export class CreateCargaDto {
     @IsNotEmpty()
     @IsString()
-    @IsPositive()
     @ApiProperty()
     readonly cantidad_usuarios: string;
     @IsNotEmpty()
     @IsString()
-    @IsPositive()
     @ApiProperty()
     readonly duracion_picos: string;
     @IsNotEmpty()

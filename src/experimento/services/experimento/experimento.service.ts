@@ -52,13 +52,13 @@ export class ExperimentoService {
   async createExperiment(data: CreateExperimentoDto) {
     try {
       const deployment = await this.despliegueUtilsService.findOne(data.fk_id_despliegue);
-      const metric = await this.metricaService.findOne(data.fk_id_despliegue);
-      const load = await this.cargaService.findOne(data.fk_id_despliegue);
+      const metric = await this.metricaService.findOne(data.fk_id_metrica);
+      const load = await this.cargaService.findOne(data.fk_id_carga);
 
       if (!deployment) throw new NotFoundException(`Despliegue con id #${data.fk_id_despliegue} no se encuentra en la Base de Datos`);
       if (!metric) throw new NotFoundException(`Metrica con id #${data.fk_id_metrica} no se encuentra en la Base de Datos`);
       if (!load) throw new NotFoundException(`Carga con id #${data.fk_id_carga} no se encuentra en la Base de Datos`);
-      // if (!this.sumTimes(data.duracion, load.duracion_picos)) throw new BadRequestException(`La suma de los tiempos de carga no coincide con la duración total del experimento.`);
+      if (!this.sumTimes(data.duracion, load.duracion_picos)) throw new BadRequestException(`La suma de los tiempos de carga no coincide con la duración total del experimento.`);
 
       const ipCluster = '192.168.49.2'
       const url = `http://${ipCluster}:${deployment.puerto}`
@@ -97,15 +97,16 @@ export class ExperimentoService {
     }
   }
 
-
-  private sumTimes(totalTime: string, timesArray: string[]): boolean {
+  sumTimes(totalTime: string, timesString: string): boolean {
     const totalTimeUnit = totalTime.charAt(totalTime.length - 1); // Obtener la unidad del totalTime
     const totalSeconds = this.convertToSeconds(totalTime.substring(0, totalTime.length - 1), totalTimeUnit); // Convertir totalTime a segundos
+
+    const timesArray = timesString.split(',').map(time => time.trim()); // Dividir la cadena de tiempos en segmentos y eliminar espacios
 
     let sumSeconds = 0;
     let sumMinutes = 0;
 
-    // Iterar sobre cada elemento en el array de tiempos
+    // Iterar sobre cada elemento en la cadena de tiempos
     timesArray.forEach(timeString => {
       const unit = timeString.charAt(timeString.length - 1); // Obtener la unidad (s o m)
       const value = parseInt(timeString.substring(0, timeString.length - 1)); // Obtener el valor numérico

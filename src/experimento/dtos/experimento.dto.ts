@@ -10,7 +10,6 @@ import {
 export class CreateExperimentoDto {
   @IsNotEmpty()
   @IsString()
-  @IsPositive()
   @ApiProperty()
   readonly duracion: string;
   @IsNotEmpty()

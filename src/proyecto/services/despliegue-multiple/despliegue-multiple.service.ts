@@ -115,6 +115,7 @@ export class DespliegueMultipleService {
                         name: serviceName,
                         image: serviceConfig.image,
                         port_expose: port1,
+                        container_name: serviceConfig.container_name
                     };
                     kubernetesSpecs.push(kubernetesSpec);
                 }
@@ -125,14 +126,15 @@ export class DespliegueMultipleService {
 
     private async pullImage(proyecto: Proyecto, imagesToBuild: any[], data: CreateDeploymentDto) {
         let desplieguesRealizados: Despliegue[] = [];
+        const localRegistry = 'localhost:5000';
 
         const envMinikube = `eval $(minikube docker-env)`;
         await this.despliegueUtilsService.executeCommand(envMinikube);
         console.log(`Minikube trabaja con configuración local`);
 
         for (const container of imagesToBuild) {
-
             const imageName = container.image;
+            const containerName = container.container_name;
             console.log(`Desplegando el contenedor con nombre: ${container.name}`)
 
             const pullCommand = `docker pull ${imageName}`;
@@ -157,8 +159,8 @@ export class DespliegueMultipleService {
 
             this.imagenesDespliegues.push(imageName);
 
-            const index = imageName.indexOf("/");
-            let nameApp = imageName.substring(index + 1);
+            const index = containerName.indexOf("/");
+            let nameApp = containerName.substring(index + 1);
             nameApp = `${nameApp.toLowerCase().replace(/\s/g, '-')}`;
 
             this.nombresDespliegues.push(nameApp);

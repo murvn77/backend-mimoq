@@ -17,23 +17,23 @@ image:
   - name: springcommunity/spring-petclinic-admin-server
     portExpose: 9090
 nodePort:
-  - 30028
-  - 30081
-  - 30846
-  - 30246
-  - 31520
-  - 30937
-  - 31484
-  - 32242
+  - 30746
+  - 31738
+  - 30588
+  - 30219
+  - 31405
+  - 31645
+  - 32431
+  - 30495
 appName:
-  - spring-petclinic-config-server
-  - spring-petclinic-discovery-server
-  - spring-petclinic-customers-service
-  - spring-petclinic-visits-service
-  - spring-petclinic-vets-service
-  - spring-petclinic-api-gateway
-  - zipkin
-  - spring-petclinic-admin-server
+  - config-server
+  - discovery-server
+  - customers-service
+  - visits-service
+  - vets-service
+  - api-gateway
+  - tracing-server
+  - admin-server
 cantReplicas:
   - 1
   - 2

@@ -35,12 +35,12 @@ spec:
         app: {{ $appName }}
     spec:
       containers:
-        - name: {{ $appName }}
-          image: "{{ index $.Values.image $index "name" }}"
-          imageTag: latest
-          # imagePullPolicy: IfNotExist
-          ports:
-            - containerPort: {{ index (index $.Values.image $index) "portExpose" }}
+      - name: {{ $appName }}
+        image: "{{ index $.Values.image $index "name" }}"
+        imageTag: latest
+        # imagePullPolicy: IfNotExist
+        ports:
+          - containerPort: {{ index (index $.Values.image $index) "portExpose" }}
 ---
 apiVersion: v1
 kind: Service
@@ -52,7 +52,8 @@ spec:
   selector:
     app: {{ $appName }}
   ports:
-    - port: {{ index (index $.Values.image $index) "portExpose" }}
-      nodePort: {{ index $.Values.nodePort $index }}
-      protocol: TCP
+  - protocol: TCP
+    port: {{ index (index $.Values.image $index) "portExpose" }}
+    targetPort: {{ index (index $.Values.image $index) "portExpose" }}
+    nodePort: {{ index $.Values.nodePort $index }}
 {{- end }}
