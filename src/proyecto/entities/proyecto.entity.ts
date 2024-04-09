@@ -7,28 +7,28 @@ export class Proyecto {
     @PrimaryGeneratedColumn()
     id_proyecto: number;
 
-    @Column({ type: 'varchar', length: 100 })
-    titulo: string;
+    @Column({ type: 'varchar', length: 40 })
+    nombre: string;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'varchar', length: 250 })
     descripcion: string;
 
-    @Column({ type: 'varchar', length: 100, nullable: true})
-    url_proyecto: string;
+    @Column({ type: 'varchar', length: 10 })
+    tipo_repositorio: string; // --- Individual o multiple
 
-    // @Column({ type: 'varchar', length: 100, nullable: false})
-    // tipo: string; --- Individual o multiple
-
-    @Column('varchar', { array: true, nullable: true })    
-    urls_proyecto: string[];
+    @Column({ type: 'varchar', length: 150, nullable: true})
+    url_repositorio: string;
 
     @Column('varchar', { array: true, nullable: true })    
-    nombres_proyecto: string[];
+    urls_repositorios: string[];
 
-    @Column({ type: 'boolean', nullable: true })
+    @Column('varchar', { array: true, nullable: true })    
+    nombres_microservicios: string[];
+
+    @Column({ type: 'boolean' })
     docker_compose: boolean;
 
-    @Column({ type: 'boolean', nullable: true })
+    @Column({ type: 'boolean' })
     dockerfile: boolean;
 
     @ManyToOne(() => Usuario, (usuario) => usuario.proyectos)

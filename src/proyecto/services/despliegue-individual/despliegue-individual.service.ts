@@ -54,11 +54,11 @@ export class DespliegueIndividualService {
             throw new InternalServerErrorException(`Este despliegue ya está registrado en la base de datos`);
         }
 
-        for (let i = 0; i < proyecto.urls_proyecto.length; i++) {
+        for (let i = 0; i < proyecto.urls_repositorios.length; i++) {
             const tempDir = `./utils/temp-repo-${Date.now()}`;
-            await this.despliegueUtilsService.cloneRepository(proyecto.urls_proyecto[i], tempDir);
+            await this.despliegueUtilsService.cloneRepository(proyecto.urls_repositorios[i], tempDir);
 
-            const nombreCompletoImagen = `${proyecto.nombres_proyecto[i].toLowerCase().replace(/\s/g, '-')}`;
+            const nombreCompletoImagen = `${proyecto.nombres_microservicios[i].toLowerCase().replace(/\s/g, '-')}`;
 
             const envMinikube = `eval $(minikube docker-env)`;
             await this.despliegueUtilsService.executeCommand(envMinikube);
@@ -98,7 +98,7 @@ export class DespliegueIndividualService {
 
         console.log('Guardar cada deploy...')
 
-        for (let i = 0; i < proyecto.urls_proyecto.length; i++) {
+        for (let i = 0; i < proyecto.urls_repositorios.length; i++) {
             const newDeployment = this.despliegueRepo.create(data);
             newDeployment.proyecto = proyecto;
             newDeployment.puerto = this.puertosDespliegues[i];
@@ -150,9 +150,9 @@ appName:`;
             yamlContent += `
 cantReplicas:`;
 
-            for (let i = 0; i < data.cant_replicas.length; i++) {
+            for (let i = 0; i < data.replicas.length; i++) {
                 yamlContent += `
-  - ${data.cant_replicas[i]}`;
+  - ${data.replicas[i]}`;
             }            
 
             this.nombresDespliegues = [];

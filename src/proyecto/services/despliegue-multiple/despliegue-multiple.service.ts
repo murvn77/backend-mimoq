@@ -38,8 +38,6 @@ export class DespliegueMultipleService {
     constructor(
         @InjectRepository(Despliegue)
         private despliegueRepo: Repository<Despliegue>,
-        @InjectRepository(Proyecto)
-        private proyectoRepo: Repository<Proyecto>,
         private despliegueUtilsService: DespliegueService,
         private proyectoService: ProyectoService,
     ) { }
@@ -67,7 +65,7 @@ export class DespliegueMultipleService {
         }
 
         const tempDir = `./utils/temp-repo-${Date.now()}`;
-        await this.despliegueUtilsService.cloneRepository(proyecto.url_proyecto, tempDir);
+        await this.despliegueUtilsService.cloneRepository(proyecto.url_repositorio, tempDir);
 
         if (proyecto.docker_compose) {
             if (proyecto.dockerfile) {
@@ -168,9 +166,6 @@ export class DespliegueMultipleService {
             this.puertosExposeApps.push(container.port_expose);
         }
 
-        proyecto.nombres_proyecto = this.nombresDespliegues;
-        this.proyectoRepo.save(proyecto);
-
         let yamlContent = `namespace: ${data.namespace}
 image:`;
 
@@ -199,23 +194,24 @@ appName:`;
             yamlContent += `
 cantReplicas:`;
 
-            for (let i = 0; i < data.cant_replicas.length; i++) {
+            for (let i = 0; i < data.replicas.length; i++) {
                 yamlContent += `
-  - ${data.cant_replicas[i]}`;
+  - ${data.replicas[i]}`;
             }            
 
         console.log('YML CONTENT: ', yamlContent);
 
-        const deployment = await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);
+        await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);
 
         console.log('Llega aquí 1')
 
         for (let i = 0; i < imagesToBuild.length; i++) {
             const newDeployment = this.despliegueRepo.create(data);
+            newDeployment.nombre = this.nombresDespliegues[i];
             newDeployment.proyecto = proyecto;
             newDeployment.puerto = this.puertosDespliegues[i];
             newDeployment.label_despliegue_k8s = this.nombresDespliegues[i];
-            newDeployment.replicas = data.cant_replicas[i];
+            newDeployment.cant_replicas = data.replicas[i];
             try {
                 await this.despliegueRepo.save(newDeployment)
             } catch (error) {

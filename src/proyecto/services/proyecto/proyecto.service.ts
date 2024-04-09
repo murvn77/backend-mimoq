@@ -6,12 +6,25 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateProjectDto, UpdateProjectDto } from 'src/proyecto/dtos/proyecto.dto';
 import { UsuarioService } from 'src/usuario/services/usuario/usuario.service';
 
+import * as fs from 'fs-extra';
+import * as yaml from 'js-yaml';
+import { DespliegueService } from '../despliegue/despliegue.service';
+
+interface ServiceConfig {
+  image: string;
+  container_name: string;
+  ports: [''];
+}
+interface DockerComposeConfig {
+  services: { [serviceName: string]: ServiceConfig };
+}
 @Injectable()
 export class ProyectoService {
   constructor(
     @InjectRepository(Proyecto)
     private proyectoRepo: Repository<Proyecto>,
     private usuarioService: UsuarioService,
+    private despliegueUtilsService: DespliegueService,
   ) { }
 
   async findAll() {
@@ -50,7 +63,7 @@ export class ProyectoService {
   async findOneByUrlProject(url_proyecto: string) {
     try {
       const project = await this.proyectoRepo.findOne({
-        where: { url_proyecto: url_proyecto },
+        where: { url_repositorio: url_proyecto },
         relations: ['despliegues']
       });
       return project;
@@ -64,13 +77,32 @@ export class ProyectoService {
 
   async createProject(data: CreateProjectDto) {
     try {
+      let namesApp: string[] = [''];
+
       // const projectExists = await this.findOneByUrlProject(data.url_proyecto);
       // if (projectExists instanceof Proyecto) {
       //   throw new InternalServerErrorException(
       //     `Este proyecto ya se encuentra registrado en la BD`,
       //   );
       // }
+
+      if (data.tipo_repositorio == 'Multiple' || data.tipo_repositorio == 'multiple') {
+        const tempDir = `./utils/temp-repo-${Date.now()}`;
+        await this.despliegueUtilsService.cloneRepository(data.url_repositorio, tempDir);
+
+        const composeData = this.parseDockerCompose(`${tempDir}/docker-compose.yml`);
+        const imagesToBuild = this.dockerImageParameters(composeData);
+
+        namesApp = imagesToBuild.map(container => {
+          const index = container.image.indexOf("/");
+          let nameApp = container.image.substring(index + 1);
+          return nameApp = `${nameApp.toLowerCase().replace(/\s/g, '-')}`;
+        })
+      }
+
       const newProject = this.proyectoRepo.create(data);
+
+      newProject.nombres_microservicios = namesApp;
 
       if (data.fk_usuario) {
         const user = await this.usuarioService.findOne(data.fk_usuario);
@@ -84,6 +116,36 @@ export class ProyectoService {
         `Problemas creando el proyecto: ${error}`,
       );
     }
+  }
+
+  private parseDockerCompose(filePath: string): DockerComposeConfig {
+    try {
+      const composeData: DockerComposeConfig = yaml.load(fs.readFileSync(filePath, 'utf8')) as DockerComposeConfig;
+      return composeData;
+    } catch (error) {
+      console.error(error);
+      throw new Error('Error parsing docker-compose file');
+    }
+  }
+
+  private dockerImageParameters(composeData: DockerComposeConfig): any[] {
+    const kubernetesSpecs: any[] = [];
+    for (const serviceName in composeData.services) {
+      if (composeData.services.hasOwnProperty(serviceName)) {
+        const serviceConfig = composeData.services[serviceName];
+        const [port1,] = serviceConfig.ports[0].split(':').map(port => parseInt(port, 10));
+
+        if (serviceConfig.image != undefined) {
+          const kubernetesSpec = {
+            name: serviceName,
+            image: serviceConfig.image,
+            port_expose: port1,
+          };
+          kubernetesSpecs.push(kubernetesSpec);
+        }
+      }
+    }
+    return kubernetesSpecs;
   }
 
   async updateProject(id: number, cambios: UpdateProjectDto) {

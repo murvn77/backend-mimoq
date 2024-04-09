@@ -1,20 +1,17 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Proyecto } from './proyecto.entity';
-import { ExperimentoDespliegue } from 'src/experimento/entities/experimento-despliegue.entity';
+import { Experimento } from 'src/experimento/entities/experimento.entity';
 
 @Entity()
 export class Despliegue {
     @PrimaryGeneratedColumn()
     id_despliegue: number;
 
-    // @Column('integer', { array: true, nullable: true })    
-    // cant_replicas: number[];
-
     @Column({ type: 'varchar', length: 100 })
     nombre: string;
 
     @Column({ type: 'integer', nullable: true })
-    replicas: number;
+    cant_replicas: number;
 
     @Column({ type: 'integer', nullable: true })
     cant_pods: number;
@@ -33,8 +30,8 @@ export class Despliegue {
     proyecto: Proyecto;
 
     @OneToMany(
-        () => ExperimentoDespliegue,
-        (experimentoDespliegue) => experimentoDespliegue.despliegue,
+        () => Experimento,
+        (experimento) => experimento.despliegue,
     )
-    despliegueExperimentos: ExperimentoDespliegue[];
+    experimentos: Experimento[];
 }

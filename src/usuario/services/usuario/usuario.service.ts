@@ -66,6 +66,7 @@ export class UsuarioService {
     async createUser(data: CreateUsuarioDto) {
         try {
             const userExits = await this.findOneByEmail(data.correo);
+            
             if (userExits instanceof Usuario) {
                 throw new InternalServerErrorException(
                     `Este usuario ya se encuentra registrado en la BD`,
@@ -75,8 +76,8 @@ export class UsuarioService {
             const hashPassword = await bcrypt.hash(newUser.contrasena, 10);
             newUser.contrasena = hashPassword;
 
-            if (data.fk_rol_usuario) {
-                const rol = await this.rolUsuarioService.findOne(data.fk_rol_usuario);
+            if (data.fk_id_rol_usuario) {
+                const rol = await this.rolUsuarioService.findOne(data.fk_id_rol_usuario);
                 newUser.rol = rol;
             }
 
@@ -92,8 +93,8 @@ export class UsuarioService {
     async updateUser(id: number, cambios: UpdateUsuarioDto) {
         try {
             const user = await this.usuarioRepo.findOneBy({ id_usuario: id });
-            if (cambios.fk_rol_usuario) {
-                const rol = await this.rolUsuarioService.findOne(cambios.fk_rol_usuario);
+            if (cambios.fk_id_rol_usuario) {
+                const rol = await this.rolUsuarioService.findOne(cambios.fk_id_rol_usuario);
                 user.rol = rol;
             }
             this.usuarioRepo.merge(user, cambios);

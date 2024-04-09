@@ -10,24 +10,28 @@ import {
 } from 'class-validator';
 
 export class CreateDeploymentDto {
-    @IsNotEmpty()
+    @IsNotEmpty({message: 'El nombre es obligatorio'})
     @IsString()
     @ApiProperty()
     readonly nombre: string;
+    // @IsNotEmpty({message: 'La cantidad de réplicas es obligatoria'})
+    // @IsNumber({}, {each: true})
+    // @ApiProperty()
+    // readonly cant_replicas: number;
     @IsNotEmpty()
-    @IsArray()
+    @IsNumber({}, {each: true})
     @ApiProperty()
-    readonly cant_replicas: number[];
-    @IsNotEmpty()
+    readonly replicas: number[];
+    @IsOptional() // Cantidad de pods puede ser vacio inicialmente
     @IsNumber()
     @IsPositive()
     @ApiProperty()
     readonly cant_pods: number;
-    @IsNotEmpty()
+    @IsNotEmpty({message: 'El nombre del namespace es obligatorio'})
     @IsString()
     @ApiProperty()
     readonly namespace: string;
-    @IsNotEmpty()
+    @IsNotEmpty({message: 'El FK del proyecto es obligatorio'})
     @IsNumber()
     @IsPositive()
     @ApiProperty()

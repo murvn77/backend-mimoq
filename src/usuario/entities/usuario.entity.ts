@@ -10,13 +10,13 @@ export class Usuario {
     @Column({ type: 'varchar', length: 100 })
     nombre: string;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'varchar', length: 80 })
     correo: string;
 
-    @Column({ type: 'varchar', length: 100 })
-    documento: string;
+    @Column({ type: 'integer'})
+    documento: number;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'varchar', length: 100 }) // La contraseña se cifra
     contrasena: string;
 
     @ManyToOne(() => RolUsuario, (rol_usuario) => rol_usuario.usuarios, {

@@ -11,7 +11,6 @@ import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
 
 /** Utils */
 import * as fs from 'fs-extra';
-import * as yaml from 'js-yaml';
 import * as net from 'net';
 import { exec } from 'child_process';
 import simpleGit from 'simple-git';

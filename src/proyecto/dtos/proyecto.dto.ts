@@ -11,35 +11,39 @@ import {
 } from 'class-validator';
 
 export class CreateProjectDto {
-    @IsNotEmpty()
+    @IsNotEmpty({message: 'El nombre es obligatorio'})
     @IsString()
     @ApiProperty()
-    readonly titulo: string;
-    @IsNotEmpty()
+    readonly nombre: string;
+    @IsOptional()
     @IsString()
     @ApiProperty()
     readonly descripcion: string;
+    @IsNotEmpty({message: 'El tipo de repositorio es obligatorio'})
+    @IsString()
+    @ApiProperty()
+    readonly tipo_repositorio: string;
     @IsOptional()
     @IsString()
     @ApiProperty()
-    readonly url_proyecto: string;
+    readonly url_repositorio: string;
     @IsOptional()
     @IsArray()
     @ApiProperty()
-    readonly urls_proyecto: string[];
+    readonly urls_repositorios: string[];
     @IsOptional()
     @IsArray()
     @ApiProperty()
-    readonly nombres_proyecto: string[];
-    @IsOptional()
+    readonly nombres_microservicios: string[];
+    @IsNotEmpty({message: 'Contiene docker compose es obligatorio'})
     @IsBoolean()
     @ApiProperty()
     readonly docker_compose: boolean;
-    @IsOptional()
+    @IsNotEmpty({message: 'Contiene dockerfile es obligatorio'})
     @IsBoolean()
     @ApiProperty()
     readonly dockerfile: boolean;
-    @IsNotEmpty()
+    @IsNotEmpty({message: 'El FK del usuario es obligatorio'})
     @IsNumber()
     @IsPositive()
     @ApiProperty()
