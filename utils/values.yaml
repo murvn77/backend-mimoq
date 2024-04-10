@@ -1,45 +1,15 @@
 namespace: default
 image:
-  - name: springcommunity/spring-petclinic-config-server
-    portExpose: 8888
-  - name: springcommunity/spring-petclinic-discovery-server
-    portExpose: 8761
-  - name: springcommunity/spring-petclinic-customers-service
-    portExpose: 8081
-  - name: springcommunity/spring-petclinic-visits-service
-    portExpose: 8082
-  - name: springcommunity/spring-petclinic-vets-service
-    portExpose: 8083
-  - name: springcommunity/spring-petclinic-api-gateway
-    portExpose: 8080
-  - name: openzipkin/zipkin
-    portExpose: 9411
-  - name: springcommunity/spring-petclinic-admin-server
-    portExpose: 9090
+  - name: mimoqdocker-graphql
+    portExpose: 3000
+  - name: mimoqintroduccion-docker
+    portExpose: 3000
 nodePort:
-  - 30746
-  - 31738
-  - 30588
-  - 30219
-  - 31405
-  - 31645
-  - 32431
-  - 30495
+  - 32614
+  - 31505
 appName:
-  - config-server
-  - discovery-server
-  - customers-service
-  - visits-service
-  - vets-service
-  - api-gateway
-  - tracing-server
-  - admin-server
+  - mimoqdocker-graphql
+  - mimoqintroduccion-docker
 cantReplicas:
-  - 1
   - 2
-  - 1
-  - 2
-  - 1
-  - 2
-  - 1
   - 2

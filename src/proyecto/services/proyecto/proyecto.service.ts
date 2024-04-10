@@ -86,6 +86,8 @@ export class ProyectoService {
       //   );
       // }
 
+      const newProject = this.proyectoRepo.create(data);
+
       if (data.tipo_repositorio == 'Multiple' || data.tipo_repositorio == 'multiple') {
         const tempDir = `./utils/temp-repo-${Date.now()}`;
         await this.despliegueUtilsService.cloneRepository(data.url_repositorio, tempDir);
@@ -98,11 +100,9 @@ export class ProyectoService {
           let nameApp = container.image.substring(index + 1);
           return nameApp = `${nameApp.toLowerCase().replace(/\s/g, '-')}`;
         })
+
+        newProject.nombres_microservicios = namesApp;
       }
-
-      const newProject = this.proyectoRepo.create(data);
-
-      newProject.nombres_microservicios = namesApp;
 
       if (data.fk_usuario) {
         const user = await this.usuarioService.findOne(data.fk_usuario);

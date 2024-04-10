@@ -141,21 +141,21 @@ export class DespliegueMultipleService {
             await this.despliegueUtilsService.executeCommand(pullCommand);
             console.log(`Haciendo pull de la imagen`);
 
-            const loadImageMinikube = `minikube image load ${imageName}`;
-            await this.despliegueUtilsService.executeCommand(loadImageMinikube);
-            console.log(`Imagen cargada en minikube correctamente`);
+            // const loadImageMinikube = `minikube image load ${imageName}`;
+            // await this.despliegueUtilsService.executeCommand(loadImageMinikube);
+            // console.log(`Imagen cargada en minikube correctamente`);
 
-            // const tagCommand = `docker tag ${imageName} ${localRegistry}/${imageName}`;
-            // await this.despliegueUtilsService.executeCommand(tagCommand);
-            // console.log(`Imagen Docker etiquetada correctamente`);
+            const tagCommand = `docker tag ${imageName} ${localRegistry}/${imageName}`;
+            await this.despliegueUtilsService.executeCommand(tagCommand);
+            console.log(`Imagen Docker etiquetada correctamente`);
 
-            // const removeBuildCommand = `docker image rm ${imageName}`;
-            // await this.despliegueUtilsService.executeCommand(removeBuildCommand);
-            // console.log(`Imagen Docker original eliminada correctamente`);
+            const removeBuildCommand = `docker image rm ${imageName}`;
+            await this.despliegueUtilsService.executeCommand(removeBuildCommand);
+            console.log(`Imagen Docker original eliminada correctamente`);
 
-            // const pushCommand = `docker push ${localRegistry}/${imageName}`;
-            // await this.executeCommand(pushCommand);
-            // console.log(`Imagen Docker subida correctamente al registry local`);
+            const pushCommand = `docker push ${localRegistry}/${imageName}`;
+            await this.despliegueUtilsService.executeCommand(pushCommand);
+            console.log(`Imagen Docker subida correctamente al registry local`);
 
             this.imagenesDespliegues.push(imageName);
 

@@ -34,11 +34,10 @@ export class DespliegueIndividualService {
     ) { }
 
     async validateProjectToDeploy(data: CreateDeploymentDto) {
+        const localRegistry = 'localhost:5000';
         const proyecto = await this.proyectoService.findOne(data.fk_proyecto);
 
-        if (!proyecto) {
-            throw new InternalServerErrorException(`No se encontró el proyecto con id ${data.fk_proyecto}`);
-        }
+        if (!proyecto) throw new InternalServerErrorException(`No se encontró el proyecto con id ${data.fk_proyecto}`);
 
         const existingDeployment = await this.despliegueRepo.findOne({
             where: {
@@ -50,9 +49,7 @@ export class DespliegueIndividualService {
             }
         });
 
-        if (existingDeployment) {
-            throw new InternalServerErrorException(`Este despliegue ya está registrado en la base de datos`);
-        }
+        if (existingDeployment) throw new InternalServerErrorException(`Este despliegue ya está registrado en la base de datos`);
 
         for (let i = 0; i < proyecto.urls_repositorios.length; i++) {
             const tempDir = `./utils/temp-repo-${Date.now()}`;
@@ -60,27 +57,41 @@ export class DespliegueIndividualService {
 
             const nombreCompletoImagen = `${proyecto.nombres_microservicios[i].toLowerCase().replace(/\s/g, '-')}`;
 
-            const envMinikube = `eval $(minikube docker-env)`;
-            await this.despliegueUtilsService.executeCommand(envMinikube);
-            console.log(`Minikube trabaja con configuración local`);
-
             const buildCommand = `docker build -t ${nombreCompletoImagen} ${tempDir}`;
             await this.despliegueUtilsService.executeCommand(buildCommand);
             console.log(`Imagen Docker construida correctamente`);
 
-            const loadImageMinikube = `minikube image load ${nombreCompletoImagen}`;
-            await this.despliegueUtilsService.executeCommand(loadImageMinikube);
-            console.log(`Imagen cargada en minikube correctamente`);
+            // const envMinikube = `eval $(minikube docker-env)`;
+            // await this.despliegueUtilsService.executeCommand(envMinikube);
+            // console.log(`Minikube trabaja con configuración local`);
+
+            // const loadImageMinikube = `minikube image load ${nombreCompletoImagen}`;
+            // await this.despliegueUtilsService.executeCommand(loadImageMinikube);
+            // console.log(`Imagen cargada en minikube correctamente`);
+
+            const tagCommand = `docker tag ${nombreCompletoImagen} ${localRegistry}/${nombreCompletoImagen}`;
+            await this.despliegueUtilsService.executeCommand(tagCommand);
+            console.log(`Imagen Docker etiquetada correctamente`);
+
+            // const removeBuildCommand = `docker image rm ${nombreCompletoImagen}`;
+            // await this.despliegueUtilsService.executeCommand(removeBuildCommand);
+            // console.log(`Imagen Docker original eliminada correctamente`);
+
+            const pushCommand = `docker push ${localRegistry}/${nombreCompletoImagen}`;
+            await this.despliegueUtilsService.executeCommand(pushCommand);
+            console.log(`Imagen Docker subida correctamente al registry local`);
 
             const dockerfilePath = `${tempDir}/Dockerfile`;
             const dockerfileContent = fs.readFileSync(dockerfilePath, 'utf-8');
             const portMatch = dockerfileContent.match(/EXPOSE\s+(\d+)/);
             const port_expose = portMatch ? portMatch[1] : '';
 
-            this.nombresDespliegues.push(nombreCompletoImagen);
+            this.nombresDespliegues.push('mimoq' + nombreCompletoImagen);
             this.puertosDespliegues.push(await this.despliegueUtilsService.findAvailablePort());
             this.puertosExposeApps.push(port_expose);
         }
+
+        console.log('Nombres despliegues: ', this.nombresDespliegues, ' Puertos despliegues: ', this.puertosDespliegues, ' Puertos expose: ', this.puertosExposeApps);
 
         return await this.createIndividualDeployment(proyecto, data);
     }
@@ -158,9 +169,10 @@ cantReplicas:`;
             this.nombresDespliegues = [];
             this.puertosDespliegues = [];
             this.puertosExposeApps = [];
+            const deployHelmName = `${data.nombre.toLowerCase().replace(/\s/g, '-')}`;
 
             console.log('YML CONTENT: ', yamlContent);
-            return await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);
+            return await this.despliegueUtilsService.deployApp(deployHelmName, yamlContent);
         } catch (error) {
             console.error(`Error en buildAndPushImage: ${error.message}`);
             return false;
