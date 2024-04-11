@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
 import { Carga } from './carga.entity';
 import { Metrica } from 'src/metrica/entities/metrica.entity';
@@ -11,13 +11,10 @@ export class Experimento {
     @Column({ type: 'varchar', length: 5 })
     duracion: string;
 
-    // @Column({ type: 'integer' })
-    // cantidad_usuarios: number;
-
     @Column({ type: 'integer' })
-    cantidad_replicas: number;
+    cant_replicas: number;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'varchar', length: 200 })
     endpoints: string[];
 
     @ManyToOne(() => Despliegue, (despliegue) => despliegue.experimentos)
@@ -27,10 +24,6 @@ export class Experimento {
     @ManyToOne(() => Carga, (carga) => carga.experimentos)
     @JoinColumn({ name: 'fk_id_carga' })
     carga: Carga;
-
-    // @ManyToOne(() => Metrica, (metrica) => metrica.experimentos)
-    // @JoinColumn({ name: 'fk_id_metrica' })
-    // metrica: Metrica;
 
     @ManyToMany(() => Metrica)
     @JoinTable()

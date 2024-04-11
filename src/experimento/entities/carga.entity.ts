@@ -6,10 +6,10 @@ export class Carga {
     @PrimaryGeneratedColumn()
     id_carga: number;
 
-    @Column('varchar')
-    cantidad_usuarios: string;
+    @Column({ type: 'varchar', length: 50 })
+    cant_usuarios: string;
 
-    @Column('varchar')
+    @Column({ type: 'varchar', length: 50 })
     duracion_picos: string;
 
     @Column({ type: 'boolean' })

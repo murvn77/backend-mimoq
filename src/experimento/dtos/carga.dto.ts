@@ -1,11 +1,8 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 
 import {
-    IsArray,
     IsBoolean,
     IsNotEmpty,
-    IsNumber,
-    IsPositive,
     IsString,
 } from 'class-validator';
 
@@ -13,7 +10,7 @@ export class CreateCargaDto {
     @IsNotEmpty()
     @IsString()
     @ApiProperty()
-    readonly cantidad_usuarios: string;
+    readonly cant_usuarios: string;
     @IsNotEmpty()
     @IsString()
     @ApiProperty()

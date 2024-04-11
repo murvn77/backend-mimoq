@@ -7,7 +7,7 @@ export class Despliegue {
     @PrimaryGeneratedColumn()
     id_despliegue: number;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'varchar', length: 50 })
     nombre: string;
 
     @Column({ type: 'integer', nullable: true })
@@ -16,7 +16,7 @@ export class Despliegue {
     @Column({ type: 'integer', nullable: true })
     cant_pods: number;
 
-    @Column({ type: 'varchar', length: 100 })
+    @Column({ type: 'varchar', length: 50 })
     namespace: string;
 
     @Column({ type: 'varchar', length: 100 })

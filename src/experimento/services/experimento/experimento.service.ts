@@ -75,7 +75,7 @@ export class ExperimentoService {
 
       for (let i = 1; i <= data.cantidad_replicas; i++) {
         const out = `./utils/test-results-${i}.csv`;
-        const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS=${load.cantidad_usuarios} -e DURATION=${load.duracion_picos} -e ENDPOINTS="/" -e DELIMITER="," ${dirLoad}`
+        const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS=${load.cant_usuarios} -e DURATION=${load.duracion_picos} -e ENDPOINTS="/" -e DELIMITER="," ${dirLoad}`
         await this.executeCommand(loadCommand);
 
         const contenidoCSV = fs.readFileSync(out, 'utf8');
