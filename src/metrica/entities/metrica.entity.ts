@@ -18,10 +18,4 @@ export class Metrica {
     })
     @JoinColumn({ name: 'fk_id_atributo' })
     atributo: Atributo;
-
-    @OneToMany(
-        () => Experimento,
-        (experimento) => experimento.metrica,
-    )
-    experimentos: Experimento[];
 }

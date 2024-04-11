@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
 import { Carga } from './carga.entity';
 import { Metrica } from 'src/metrica/entities/metrica.entity';
@@ -28,7 +28,11 @@ export class Experimento {
     @JoinColumn({ name: 'fk_id_carga' })
     carga: Carga;
 
-    @ManyToOne(() => Metrica, (metrica) => metrica.experimentos)
-    @JoinColumn({ name: 'fk_id_metrica' })
-    metrica: Metrica;
+    // @ManyToOne(() => Metrica, (metrica) => metrica.experimentos)
+    // @JoinColumn({ name: 'fk_id_metrica' })
+    // metrica: Metrica;
+
+    @ManyToMany(() => Metrica)
+    @JoinTable()
+    metricas: Metrica[];
 }

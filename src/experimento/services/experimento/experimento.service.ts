@@ -9,6 +9,7 @@ import { CreateExperimentoDto, UpdateExperimentoDto } from 'src/experimento/dtos
 import { MetricaService } from 'src/metrica/services/metrica/metrica.service';
 import { CargaService } from '../carga/carga.service';
 import { Experimento } from 'src/experimento/entities/experimento.entity';
+import { Metrica } from 'src/metrica/entities/metrica.entity';
 
 @Injectable()
 export class ExperimentoService {
@@ -33,30 +34,34 @@ export class ExperimentoService {
   }
 
   async findOne(id: number) {
-      try {
-          const deployExperiment = await this.experimentoRepo.findOneBy({ id_experimento: id });
-          if (!(deployExperiment instanceof Experimento)) {
-              throw new NotFoundException(
-                  `Experimento con id #${id} no se encuentra en la Base de Datos`,
-              );
-          }
-          return deployExperiment;
-      } catch (error) {
-          console.error(error);
-          throw new InternalServerErrorException(
-              `Problemas encontrando a un experimento por id: ${error}`,
-          );
+    try {
+      const deployExperiment = await this.experimentoRepo.findOneBy({ id_experimento: id });
+      if (!(deployExperiment instanceof Experimento)) {
+        throw new NotFoundException(
+          `Experimento con id #${id} no se encuentra en la Base de Datos`,
+        );
       }
+      return deployExperiment;
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        `Problemas encontrando a un experimento por id: ${error}`,
+      );
+    }
   }
 
   async createExperiment(data: CreateExperimentoDto) {
     try {
+      const metrics: Metrica[] = [];
+      for (const fk_id_metrica of data.fk_ids_metricas) {
+        const metric = await this.metricaService.findOne(fk_id_metrica);
+        if (!metric) throw new NotFoundException(`Metrica con id #${fk_id_metrica} no se encuentra en la Base de Datos`);
+        metrics.push(metric);
+      }
       const deployment = await this.despliegueUtilsService.findOne(data.fk_id_despliegue);
-      const metric = await this.metricaService.findOne(data.fk_id_metrica);
       const load = await this.cargaService.findOne(data.fk_id_carga);
 
       if (!deployment) throw new NotFoundException(`Despliegue con id #${data.fk_id_despliegue} no se encuentra en la Base de Datos`);
-      if (!metric) throw new NotFoundException(`Metrica con id #${data.fk_id_metrica} no se encuentra en la Base de Datos`);
       if (!load) throw new NotFoundException(`Carga con id #${data.fk_id_carga} no se encuentra en la Base de Datos`);
       if (!this.sumTimes(data.duracion, load.duracion_picos)) throw new BadRequestException(`La suma de los tiempos de carga no coincide con la duración total del experimento.`);
 
@@ -84,7 +89,7 @@ export class ExperimentoService {
       const newExperiment = this.experimentoRepo.create(data);
 
       newExperiment.despliegue = deployment;
-      newExperiment.metrica = metric;
+      newExperiment.metricas = metrics;;
       newExperiment.carga = load;
       // newExperiment.resultado = files;
 
@@ -136,23 +141,23 @@ export class ExperimentoService {
   }
 
   async updateExperiment(id: number, cambios: UpdateExperimentoDto) {
-      try {
-          const deployExperiment = await this.experimentoRepo.findOneBy({ id_experimento: id });
-          // if (cambios.fk_estadoU) {
-          //     const estado = await this.estadoUsuarioService.findOne(
-          //         cambios.fk_estadoU,
-          //     );
-          //     user.estadoUsuario = estado;
-          // }
+    try {
+      const deployExperiment = await this.experimentoRepo.findOneBy({ id_experimento: id });
+      // if (cambios.fk_estadoU) {
+      //     const estado = await this.estadoUsuarioService.findOne(
+      //         cambios.fk_estadoU,
+      //     );
+      //     user.estadoUsuario = estado;
+      // }
 
-          this.experimentoRepo.merge(deployExperiment, cambios);
-          return this.experimentoRepo.save(deployExperiment);
-      } catch (error) {
-          console.error(error);
-          throw new InternalServerErrorException(
-              `Problemas actualizando el experimento: ${error}`,
-          );
-      }
+      this.experimentoRepo.merge(deployExperiment, cambios);
+      return this.experimentoRepo.save(deployExperiment);
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        `Problemas actualizando el experimento: ${error}`,
+      );
+    }
   }
 
   removeExperiment(id: number) {

@@ -36,8 +36,7 @@ spec:
     spec:
       containers:
       - name: {{ $appName }}
-        image: "{{ index $.Values.image $index "name" }}"
-        imageTag: latest
+        image: "{{ index $.Values.image $index "name" }}:latest"
         # imagePullPolicy: IfNotExist
         ports:
           - containerPort: {{ index (index $.Values.image $index) "portExpose" }}

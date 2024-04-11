@@ -2,96 +2,96 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
 /** Dtos */
 import { CreateDeploymentDto } from 'src/proyecto/dtos/despliegue.dto';
-
 /** Entities */
 import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
 import { Proyecto } from 'src/proyecto/entities/proyecto.entity';
-
 /** Services */
 import { ProyectoService } from '../proyecto/proyecto.service';
-
 /** Utils */
 import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import { exec } from 'child_process';
 import { DespliegueService } from '../despliegue/despliegue.service';
-
 /** Repositorio que tiene sólo un microservicio */
 @Injectable()
 export class DespliegueIndividualService {
+    private imagenesDespliegues: string[] = [];
     private nombresDespliegues: string[] = [];
     private puertosDespliegues: number[] = [];
     private puertosExposeApps: number[] = [];
+    private localRegistry = 'localhost:5000';
 
     constructor(
         @InjectRepository(Despliegue)
         private despliegueRepo: Repository<Despliegue>,
         private despliegueUtilsService: DespliegueService,
         private proyectoService: ProyectoService,
+        
     ) { }
-
     async validateProjectToDeploy(data: CreateDeploymentDto) {
-        const localRegistry = 'localhost:5000';
         const proyecto = await this.proyectoService.findOne(data.fk_proyecto);
-
         if (!proyecto) throw new InternalServerErrorException(`No se encontró el proyecto con id ${data.fk_proyecto}`);
-
+        
         const existingDeployment = await this.despliegueRepo.findOne({
             where: {
-                // cant_replicas: data.cant_replicas,
                 nombre: data.nombre,
                 cant_pods: data.cant_pods,
                 namespace: data.nombre,
                 proyecto: proyecto
             }
         });
-
         if (existingDeployment) throw new InternalServerErrorException(`Este despliegue ya está registrado en la base de datos`);
+
+        const envMinikube = `eval $(minikube docker-env)`;
+        await this.despliegueUtilsService.executeCommand(envMinikube);
+        console.log(`Minikube trabaja con configuración local`);
 
         for (let i = 0; i < proyecto.urls_repositorios.length; i++) {
             const tempDir = `./utils/temp-repo-${Date.now()}`;
             await this.despliegueUtilsService.cloneRepository(proyecto.urls_repositorios[i], tempDir);
-
             const nombreCompletoImagen = `${proyecto.nombres_microservicios[i].toLowerCase().replace(/\s/g, '-')}`;
 
             const buildCommand = `docker build -t ${nombreCompletoImagen} ${tempDir}`;
             await this.despliegueUtilsService.executeCommand(buildCommand);
             console.log(`Imagen Docker construida correctamente`);
 
-            // const envMinikube = `eval $(minikube docker-env)`;
-            // await this.despliegueUtilsService.executeCommand(envMinikube);
-            // console.log(`Minikube trabaja con configuración local`);
+            const pruneCommand = 'docker image prune -f';
+            await this.despliegueUtilsService.executeCommand(pruneCommand);
+            console.log('Imágenes "none" eliminadas correctamente');
+
+            // const tagCommand = `docker tag ${nombreCompletoImagen} ${this.localRegistry}/${nombreCompletoImagen}`;
+            // await this.despliegueUtilsService.executeCommand(tagCommand);
+            // console.log(`Imagen Docker etiquetada correctamente`);
+
+            const removeBuildCommand = `docker image rm ${nombreCompletoImagen}`;
+            await this.despliegueUtilsService.executeCommand(removeBuildCommand);
+            console.log(`Imagen Docker original eliminada correctamente`);
+
+            // const pushCommand = `docker push ${this.localRegistry}/${nombreCompletoImagen}`;
+            // await this.despliegueUtilsService.executeCommand(pushCommand);
+            // console.log(`Imagen Docker subida correctamente al registry local`);
 
             // const loadImageMinikube = `minikube image load ${nombreCompletoImagen}`;
             // await this.despliegueUtilsService.executeCommand(loadImageMinikube);
             // console.log(`Imagen cargada en minikube correctamente`);
 
-            const tagCommand = `docker tag ${nombreCompletoImagen} ${localRegistry}/${nombreCompletoImagen}`;
-            await this.despliegueUtilsService.executeCommand(tagCommand);
-            console.log(`Imagen Docker etiquetada correctamente`);
-
-            // const removeBuildCommand = `docker image rm ${nombreCompletoImagen}`;
-            // await this.despliegueUtilsService.executeCommand(removeBuildCommand);
-            // console.log(`Imagen Docker original eliminada correctamente`);
-
-            const pushCommand = `docker push ${localRegistry}/${nombreCompletoImagen}`;
-            await this.despliegueUtilsService.executeCommand(pushCommand);
-            console.log(`Imagen Docker subida correctamente al registry local`);
+            this.nombresDespliegues.push('mimoq-' + nombreCompletoImagen);
 
             const dockerfilePath = `${tempDir}/Dockerfile`;
             const dockerfileContent = fs.readFileSync(dockerfilePath, 'utf-8');
             const portMatch = dockerfileContent.match(/EXPOSE\s+(\d+)/);
             const port_expose = portMatch ? portMatch[1] : '';
 
-            this.nombresDespliegues.push('mimoq' + nombreCompletoImagen);
+            this.imagenesDespliegues.push(nombreCompletoImagen);
             this.puertosDespliegues.push(await this.despliegueUtilsService.findAvailablePort());
             this.puertosExposeApps.push(port_expose);
+
         }
 
-        console.log('Nombres despliegues: ', this.nombresDespliegues, ' Puertos despliegues: ', this.puertosDespliegues, ' Puertos expose: ', this.puertosExposeApps);
+        console.log(this.imagenesDespliegues);
+        console.log(this.nombresDespliegues);
 
         return await this.createIndividualDeployment(proyecto, data);
     }
@@ -100,15 +100,11 @@ export class DespliegueIndividualService {
         const despliegueExitoso = await this.buildAndPushImage(data);
 
         const despliegues = [];
-
         console.log('Despliegue: ', despliegueExitoso)
-
         if (!despliegueExitoso) {
             throw new InternalServerErrorException(`No se pudo realizar el despliegue`);
         }
-
         console.log('Guardar cada deploy...')
-
         for (let i = 0; i < proyecto.urls_repositorios.length; i++) {
             const newDeployment = this.despliegueRepo.create(data);
             newDeployment.proyecto = proyecto;
@@ -121,9 +117,7 @@ export class DespliegueIndividualService {
             }
             despliegues.push(newDeployment);
         }
-
         console.log('Despliegues: ', despliegues)
-
         if (despliegues != undefined) {
             return despliegues;
         } else {
@@ -135,44 +129,36 @@ export class DespliegueIndividualService {
         try {
             let yamlContent = `namespace: ${data.namespace}
 image:`;
-
-            for (let i = 0; i < this.nombresDespliegues.length; i++) {
+            for (let i = 0; i < this.imagenesDespliegues.length; i++) {
                 yamlContent += `
-  - name: ${this.nombresDespliegues[i]}
+  - name: ${this.imagenesDespliegues[i]}
     portExpose: ${this.puertosExposeApps[i]}`;
             }
-
             yamlContent += `
 nodePort:`;
-
             for (let i = 0; i < this.puertosDespliegues.length; i++) {
                 yamlContent += `
   - ${this.puertosDespliegues[i]}`;
             }
-
             yamlContent += `
 appName:`;
-
             for (let i = 0; i < this.nombresDespliegues.length; i++) {
                 yamlContent += `
   - ${this.nombresDespliegues[i]}`;
             }
-
             yamlContent += `
 cantReplicas:`;
-
             for (let i = 0; i < data.replicas.length; i++) {
                 yamlContent += `
   - ${data.replicas[i]}`;
-            }            
+            }
 
             this.nombresDespliegues = [];
             this.puertosDespliegues = [];
             this.puertosExposeApps = [];
-            const deployHelmName = `${data.nombre.toLowerCase().replace(/\s/g, '-')}`;
+            this.imagenesDespliegues = [];
 
-            console.log('YML CONTENT: ', yamlContent);
-            return await this.despliegueUtilsService.deployApp(deployHelmName, yamlContent);
+            return await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);
         } catch (error) {
             console.error(`Error en buildAndPushImage: ${error.message}`);
             return false;

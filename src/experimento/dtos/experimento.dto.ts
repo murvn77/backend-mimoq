@@ -27,10 +27,9 @@ export class CreateExperimentoDto {
   @ApiProperty()
   readonly fk_id_despliegue: number;
   @IsNotEmpty({ message: 'La FK del experimento es obligatoria' })
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({}, {each: true})
   @ApiProperty()
-  readonly fk_id_metrica: number;
+  readonly fk_ids_metricas: number[];
   @IsNotEmpty({ message: 'La FK de la carga es obligatoria' })
   @IsNumber()
   @IsPositive()

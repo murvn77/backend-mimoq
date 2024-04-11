@@ -23,6 +23,7 @@ interface ServiceConfig {
     image: string;
     container_name: string;
     ports: [''];
+    build: string;
 }
 interface DockerComposeConfig {
     services: { [serviceName: string]: ServiceConfig };
@@ -69,15 +70,31 @@ export class DespliegueMultipleService {
 
         if (proyecto.docker_compose) {
             if (proyecto.dockerfile) {
-                this.recorrerCadaCarpetaDelRepoParaDockerfile(); // Mismo repositorio, cada ms con dockerfile
+                /**
+                 * Docker compose con servicios que tiene image o build
+                 * PERO los servicios no tienen puertos en el compose, sino que toca sacarlos del Dockerfile que se construye
+                 * Para la construcción, se debe tomar el path de "build", ir allí, construir la imagen y sacar el puerto de dockerfile
+                 */
+                this.recorrerCadaCarpetaDelRepoParaDockerfile(proyecto, data, tempDir);
             } else {
-                return await this.pullAndPushImageFromDockerCompose(proyecto, data, tempDir); // Mismo repositorio, dockercompose con imagenes en registry
+                /**
+                 * Docker compose con servicios que tienen image o build
+                 */
+                return await this.pullAndPushImageFromDockerCompose(proyecto, data, tempDir); 
             }
         }
     }
 
-    async recorrerCadaCarpetaDelRepoParaDockerfile() {
-        /** Impelemtación después */
+    async recorrerCadaCarpetaDelRepoParaDockerfile(proyecto: Proyecto, data: CreateDeploymentDto, tempDir: string) {
+        try {
+            const composeData = this.parseDockerCompose(`${tempDir}/docker-compose.yml`);
+            const imagesToBuild = this.dockerImageBuildParameters(composeData);
+
+            return await this.pullImage(proyecto, imagesToBuild, data)
+        } catch (error) {
+            console.error(`Error en buildAndPushMultipleImage: ${error.message}`);
+            return false;
+        }
     }
 
     /** Crear imágenes en el registro local si el repositorio tiene docker-compose */
@@ -104,6 +121,40 @@ export class DespliegueMultipleService {
     }
 
     private dockerImageParameters(composeData: DockerComposeConfig): any[] {
+        const kubernetesSpecs: any[] = [];
+        let guardada = false;
+        for (const serviceName in composeData.services) {
+            if (composeData.services.hasOwnProperty(serviceName)) {
+                const serviceConfig = composeData.services[serviceName];
+                const [port1,] = serviceConfig.ports[0].split(':').map(port => parseInt(port, 10));
+
+                if (serviceConfig.image != undefined) {
+                    const kubernetesSpec = {
+                        name: serviceName,
+                        image: serviceConfig.image,
+                        port_expose: port1,
+                        container_name: serviceConfig.container_name
+                    };
+                    kubernetesSpecs.push(kubernetesSpec);
+                    guardada = true;
+                }
+
+                // if (serviceConfig.image != undefined && !guardada) {
+                //     const kubernetesSpec = {
+                //         build: serviceConfig.build,
+                //         image: serviceConfig.image,
+                //         port_expose: port1,
+                //         container_name: serviceConfig.container_name
+                //     };
+                //     kubernetesSpecs.push(kubernetesSpec);
+                // }
+            }
+            guardada = false;
+        }
+        return kubernetesSpecs;
+    }
+
+    private dockerImageBuildParameters(composeData: DockerComposeConfig): any[] {
         const kubernetesSpecs: any[] = [];
         for (const serviceName in composeData.services) {
             if (composeData.services.hasOwnProperty(serviceName)) {
