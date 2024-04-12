@@ -13,9 +13,6 @@ export class Proyecto {
     @Column({ type: 'varchar', length: 250 })
     descripcion: string;
 
-    @Column({ type: 'varchar', length: 10 })
-    tipo_repositorio: string; // --- Individual o multiple
-
     @Column({ type: 'varchar', length: 150, nullable: true})
     url_repositorio: string;
 

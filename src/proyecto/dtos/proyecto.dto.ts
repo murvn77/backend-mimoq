@@ -19,10 +19,6 @@ export class CreateProjectDto {
     @IsString()
     @ApiProperty()
     readonly descripcion: string;
-    @IsNotEmpty({message: 'El tipo de repositorio es obligatorio'})
-    @IsString()
-    @ApiProperty()
-    readonly tipo_repositorio: string;
     @IsOptional()
     @IsString()
     @ApiProperty()

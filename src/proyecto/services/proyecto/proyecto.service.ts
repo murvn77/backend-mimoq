@@ -88,7 +88,7 @@ export class ProyectoService {
 
       const newProject = this.proyectoRepo.create(data);
 
-      if (data.tipo_repositorio == 'Multiple' || data.tipo_repositorio == 'multiple') {
+      if (data.docker_compose == true) {
         const tempDir = `./utils/temp-repo-${Date.now()}`;
         await this.despliegueUtilsService.cloneRepository(data.url_repositorio, tempDir);
 
