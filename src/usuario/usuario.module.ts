@@ -6,8 +6,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RolUsuarioService } from './services/rol-usuario/rol-usuario.service';
 import { RolUsuarioController } from './controllers/rol-usuario/rol-usuario.controller';
 import { RolUsuario } from './entities/rol-usuario.entity';
-import { AuthModule } from 'src/auth/auth.module';
-import { AuthService } from 'src/auth/services/auth/auth.service';
 
 @Module({
   imports: [
