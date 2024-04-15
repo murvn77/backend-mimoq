@@ -20,9 +20,9 @@ export class ProyectoController {
     return this.proyectoService.findOne(id);
   }
 
-  @Get('url_proyecto/:url_proyecto')
-  findOneByUrlProject(@Param('url_proyecto') url_proyecto: string) {
-    return this.proyectoService.findOneByUrlProject(url_proyecto);
+  @Get('usuario/:id')
+  findAllByUser(@Param('id', ParseIntPipe) id: number) {
+    return this.proyectoService.findAllByUser(id);
   }
 
   @Post()

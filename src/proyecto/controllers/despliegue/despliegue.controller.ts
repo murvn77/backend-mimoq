@@ -24,6 +24,12 @@ export class DespliegueController {
         return this.despliegueService.findOne(id);
     }
 
+
+    @Get('proyecto/:id')
+    findAllByProject(@Param('id', ParseIntPipe) id: number) {
+        return this.despliegueService.findAllByProject(id);
+    }
+
     @Get('image/usuarioImg/:usuario/nombreImg/:nombre/tagImg/:tag')
     findOneByImage(@Param('usuario') usuario: string, @Param('nombre') nombre: string, @Param('tag') tag: string) {
         return this.despliegueService.findOneByImage(usuario, nombre, tag);
