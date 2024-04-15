@@ -9,6 +9,7 @@ import { UsuarioService } from 'src/usuario/services/usuario/usuario.service';
 import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import { DespliegueService } from '../despliegue/despliegue.service';
+import { Usuario } from 'src/usuario/entities/usuario.entity';
 
 interface ServiceConfig {
   image: string;
@@ -40,6 +41,27 @@ export class ProyectoService {
     }
   }
 
+  async findAllByUser(id: number) {
+    try {
+      const usuario = await this.usuarioService.findOne(id);
+
+      if ( !(usuario instanceof Usuario) ) {
+        throw new NotFoundException(
+          `Usuario con id #${id} no se encuentra en la Base de Datos para mostrar los proyectos`,
+        );
+      }
+
+      return await this.proyectoRepo.find({
+        where: { usuario: usuario }
+      });
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        `Problemas encontrando los proyectos de un usuario: ${error}`,
+      );
+    }
+  }
+
   async findOne(id: number) {
     try {
       const project = await this.proyectoRepo.findOne({
@@ -60,10 +82,25 @@ export class ProyectoService {
     }
   }
 
-  async findOneByUrlProject(url_proyecto: string) {
+  async findOneByUrlProjectAndName(url_repositorio: string, nombre: string) {
     try {
       const project = await this.proyectoRepo.findOne({
-        where: { url_repositorio: url_proyecto },
+        where: { url_repositorio: url_repositorio, nombre: nombre },
+        relations: ['despliegues']
+      });
+      return project;
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        `Problemas encontrando el proyecto dada la url: ${error}`,
+      );
+    }
+  }
+
+  async findOneByUrlsProjectAndName(urls_repositorios: string[], nombre: string) {
+    try {
+      const project = await this.proyectoRepo.findOne({
+        where: { /*urls_repositorios: urls_repositorios,*/ nombre: nombre },
         relations: ['despliegues']
       });
       return project;
@@ -79,12 +116,14 @@ export class ProyectoService {
     try {
       let namesApp: string[] = [''];
 
-      // const projectExists = await this.findOneByUrlProject(data.url_proyecto);
-      // if (projectExists instanceof Proyecto) {
-      //   throw new InternalServerErrorException(
-      //     `Este proyecto ya se encuentra registrado en la BD`,
-      //   );
-      // }
+      const projectExistsI = await this.findOneByUrlProjectAndName(data.url_repositorio, data.nombre);
+      const projectExistsM = await this.findOneByUrlsProjectAndName(data.urls_repositorios, data.nombre);
+
+      if (projectExistsI instanceof Proyecto || projectExistsM instanceof Proyecto) {
+        throw new InternalServerErrorException(
+          `Este proyecto ya se encuentra registrado en la BD`,
+        );
+      }
 
       const newProject = this.proyectoRepo.create(data);
 

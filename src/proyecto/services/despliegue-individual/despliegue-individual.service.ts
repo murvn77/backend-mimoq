@@ -21,6 +21,8 @@ export class DespliegueIndividualService {
     private nombresDespliegues: string[] = [];
     private puertosDespliegues: number[] = [];
     private puertosExposeApps: number[] = [];
+    private imagenesRepository: string[] = [];
+
     private localRegistry = 'localhost:5000';
 
     constructor(
@@ -87,7 +89,7 @@ export class DespliegueIndividualService {
             this.imagenesDespliegues.push(nombreCompletoImagen);
             this.puertosDespliegues.push(await this.despliegueUtilsService.findAvailablePort());
             this.puertosExposeApps.push(port_expose);
-
+            // this.imagenesRepository.push(imageLocalRegistry);
         }
 
         console.log(this.imagenesDespliegues);

@@ -1,5 +1,5 @@
 /** NestJS */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -14,16 +14,40 @@ import * as fs from 'fs-extra';
 import * as net from 'net';
 import { exec } from 'child_process';
 import simpleGit from 'simple-git';
+import { ProyectoService } from '../proyecto/proyecto.service';
+import { Proyecto } from 'src/proyecto/entities/proyecto.entity';
 
 @Injectable()
 export class DespliegueService {
   constructor(
     @InjectRepository(Despliegue)
     private despliegueRepo: Repository<Despliegue>,
+    private proyectoService: ProyectoService,
   ) { }
 
   async findAll() {
     return await this.despliegueRepo.find({});
+  }
+
+  async findAllByProject(id: number) {
+    try {
+      const proyecto = await this.proyectoService.findOne(id);
+
+      if ( !(proyecto instanceof Proyecto) ) {
+        throw new NotFoundException(
+          `Proyecto con id #${id} no se encuentra en la Base de Datos para mostrar los despliegues`,
+        );
+      }
+
+      return await this.despliegueRepo.find({
+        where: { proyecto: proyecto }
+      });
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException(
+        `Problemas encontrando los despliegues de un proyecto: ${error}`,
+      );
+    }
   }
 
   async findOne(id: number) {

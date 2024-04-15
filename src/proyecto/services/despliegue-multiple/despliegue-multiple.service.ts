@@ -35,6 +35,7 @@ export class DespliegueMultipleService {
     private nombresDespliegues: string[] = [];
     private puertosDespliegues: number[] = [];
     private puertosExposeApps: number[] = [];
+    private imagenesRepository: string[] = [];
 
     constructor(
         @InjectRepository(Despliegue)
@@ -185,7 +186,8 @@ export class DespliegueMultipleService {
 
         for (const container of imagesToBuild) {
             const imageName = container.image;
-            const containerName = container.container_name;
+            const containerName = container.container_name; 
+            const imageLocalRegistry = `${localRegistry}/${imageName}`;
             console.log(`Desplegando el contenedor con nombre: ${container.name}`)
 
             const pullCommand = `docker pull ${imageName}`;
@@ -196,7 +198,7 @@ export class DespliegueMultipleService {
             // await this.despliegueUtilsService.executeCommand(loadImageMinikube);
             // console.log(`Imagen cargada en minikube correctamente`);
 
-            const tagCommand = `docker tag ${imageName} ${localRegistry}/${imageName}`;
+            const tagCommand = `docker tag ${imageName} ${imageLocalRegistry}`;
             await this.despliegueUtilsService.executeCommand(tagCommand);
             console.log(`Imagen Docker etiquetada correctamente`);
 
@@ -204,7 +206,7 @@ export class DespliegueMultipleService {
             await this.despliegueUtilsService.executeCommand(removeBuildCommand);
             console.log(`Imagen Docker original eliminada correctamente`);
 
-            const pushCommand = `docker push ${localRegistry}/${imageName}`;
+            const pushCommand = `docker push ${imageLocalRegistry}`;
             await this.despliegueUtilsService.executeCommand(pushCommand);
             console.log(`Imagen Docker subida correctamente al registry local`);
 
@@ -217,6 +219,7 @@ export class DespliegueMultipleService {
             this.nombresDespliegues.push(nameApp);
             this.puertosDespliegues.push(await this.despliegueUtilsService.findAvailablePort());
             this.puertosExposeApps.push(container.port_expose);
+            this.imagenesRepository.push(imageLocalRegistry);
         }
 
         let yamlContent = `namespace: ${data.namespace}
@@ -263,7 +266,7 @@ cantReplicas:`;
             newDeployment.nombre = this.nombresDespliegues[i];
             newDeployment.proyecto = proyecto;
             newDeployment.puerto = this.puertosDespliegues[i];
-            newDeployment.label_despliegue_k8s = this.nombresDespliegues[i];
+            newDeployment.imagen = this.imagenesRepository[i];
             newDeployment.cant_replicas = data.replicas[i];
             try {
                 await this.despliegueRepo.save(newDeployment)
@@ -277,6 +280,7 @@ cantReplicas:`;
         this.nombresDespliegues = [];
         this.puertosDespliegues = [];
         this.puertosExposeApps = [];
+        this.imagenesRepository = [];
 
         console.log('Llega aquí')
         return desplieguesRealizados;

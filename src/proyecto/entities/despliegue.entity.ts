@@ -25,7 +25,10 @@ export class Despliegue {
     @Column({ type: 'integer' })
     puerto: number;
 
-    @ManyToOne(() => Proyecto, (proyecto) => proyecto.despliegues)
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    imagen: string;
+
+    @ManyToOne(() => Proyecto, (proyecto) => proyecto.despliegues, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'fk_proyecto' })
     proyecto: Proyecto;
 
