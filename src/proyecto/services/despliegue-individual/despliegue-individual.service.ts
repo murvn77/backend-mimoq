@@ -111,7 +111,7 @@ export class DespliegueIndividualService {
             const newDeployment = this.despliegueRepo.create(data);
             newDeployment.proyecto = proyecto;
             newDeployment.puerto = this.puertosDespliegues[i];
-            newDeployment.label_despliegue_k8s = this.nombresDespliegues[i];
+            // newDeployment.label_despliegue_k8s = this.nombresDespliegues[i];
             try {
                 await this.despliegueRepo.save(newDeployment)
             } catch (error) {

@@ -46,6 +46,10 @@ export class DespliegueMultipleService {
 
     /** Revisa si los microservicios están en un mismo repo o no */
     async validateProjectToDeploy(data: CreateDeploymentDto) {
+        // const removeTempRepo = `rm -rf utils/temp-repo*`;
+        // await this.despliegueUtilsService.executeCommand(removeTempRepo);
+        // console.log(`Eliminando carpeta temporal antes del despliegue`);
+        
         const proyecto = await this.proyectoService.findOne(data.fk_proyecto);
 
         if (!proyecto) {

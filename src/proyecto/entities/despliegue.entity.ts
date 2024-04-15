@@ -19,8 +19,8 @@ export class Despliegue {
     @Column({ type: 'varchar', length: 50 })
     namespace: string;
 
-    @Column({ type: 'varchar', length: 100 })
-    label_despliegue_k8s: string;
+    // @Column({ type: 'varchar', length: 100 })
+    // label_despliegue_k8s: string;
 
     @Column({ type: 'integer' })
     puerto: number;
