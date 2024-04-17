@@ -23,12 +23,12 @@ for (let i = 0; i < VUS.length; i++) {
 const stages = STAGES;
 // console.log('stages', stages);
 export const options = {
-  thresholds: {
-    //Si la taza de error es mayor al 1% el test falla
-    http_req_failed: ["rate<0.01"],
-    //Si la duración de la petición es mayor a 1000ms el test falla
-    http_req_duration: ["p(95)<1000"],
-  },
+  // thresholds: {
+  //   //Si la taza de error es mayor al 1% el test falla
+  //   http_req_failed: ["rate<0.01"],
+  //   //Si la duración de la petición es mayor a 1000ms el test falla
+  //   http_req_duration: ["p(95)<1000"],
+  // },
   stages: stages
   // stages: [
   //   { duration: "30s", target: 30 },

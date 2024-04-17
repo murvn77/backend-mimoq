@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateSubatributoDto } from 'src/metrica/dtos/subatributo.dto';
 import { Subatributo } from 'src/metrica/entities/subatributo.entity';
 import { Repository } from 'typeorm';
+import { AtributoService } from '../atributo/atributo.service';
 
 @Injectable()
 export class SubatributoService {
     constructor(
         @InjectRepository(Subatributo)
         private subatributoRepo: Repository<Subatributo>,
+        private atributoService: AtributoService
     ) { }
 
     async find() {
@@ -62,6 +64,12 @@ export class SubatributoService {
     async createSubatributo(data: CreateSubatributoDto) {
         try {
             const newSubatributo = this.subatributoRepo.create(data);
+
+            if ( data.fk_id_atributo ) {
+                const atributo = await this.atributoService.findOne(data.fk_id_atributo)
+                newSubatributo.atributo = atributo;
+            }
+
             return this.subatributoRepo.save(newSubatributo);
         } catch (error) {
             console.error(error);

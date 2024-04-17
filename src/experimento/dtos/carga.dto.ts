@@ -1,24 +1,19 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 
 import {
-    IsBoolean,
+    IsArray,
     IsNotEmpty,
-    IsString,
 } from 'class-validator';
 
 export class CreateCargaDto {
     @IsNotEmpty()
-    @IsString()
+    @IsArray()
     @ApiProperty()
-    readonly cant_usuarios: string;
+    readonly cant_usuarios: string[];
     @IsNotEmpty()
-    @IsString()
+    @IsArray()
     @ApiProperty()
-    readonly duracion_picos: string;
-    @IsNotEmpty()
-    @IsBoolean()
-    @ApiProperty()
-    readonly con_picos: boolean;
+    readonly duracion_picos: string[];
 }
 
 export class UpdateCargaDto extends PartialType(CreateCargaDto) { }

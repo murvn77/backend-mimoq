@@ -10,9 +10,4 @@ export class CreateAtributoDto {
   @IsString()
   @ApiProperty()
   readonly descripcion: string;
-  @IsNotEmpty({message: 'El FK del atributo es obligatorio'})
-  @IsNumber()
-  @IsPositive()
-  @ApiProperty()
-  readonly fk_id_atributo: number;
 }

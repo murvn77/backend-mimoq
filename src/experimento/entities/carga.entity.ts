@@ -6,14 +6,11 @@ export class Carga {
     @PrimaryGeneratedColumn()
     id_carga: number;
 
-    @Column({ type: 'varchar', length: 50 })
-    cant_usuarios: string;
+    @Column('varchar', { array: true })    
+    cant_usuarios: string[];
 
-    @Column({ type: 'varchar', length: 50 })
-    duracion_picos: string;
-
-    @Column({ type: 'boolean' })
-    con_picos: boolean;
+    @Column('varchar', { array: true })    
+    duracion_picos: string[];
 
     @OneToMany(
         () => Experimento,

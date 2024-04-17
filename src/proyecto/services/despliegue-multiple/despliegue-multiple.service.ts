@@ -59,7 +59,7 @@ export class DespliegueMultipleService {
         const existingDeployment = await this.despliegueRepo.findOne({
             where: {
                 // cant_replicas: data.cant_replicas,
-                nombre: data.nombre,
+                nombre: data.nombre_helm,
                 cant_pods: data.cant_pods,
                 namespace: data.namespace,
                 proyecto: proyecto
@@ -261,7 +261,7 @@ cantReplicas:`;
 
         console.log('YML CONTENT: ', yamlContent);
 
-        await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);
+        await this.despliegueUtilsService.deployApp(data.nombre_helm, yamlContent);
 
         console.log('Llega aquí 1')
 
@@ -270,7 +270,7 @@ cantReplicas:`;
             newDeployment.nombre = this.nombresDespliegues[i];
             newDeployment.proyecto = proyecto;
             newDeployment.puerto = this.puertosDespliegues[i];
-            newDeployment.imagen = this.imagenesRepository[i];
+            // newDeployment.imagen = this.imagenesRepository[i];
             newDeployment.cant_replicas = data.replicas[i];
             try {
                 await this.despliegueRepo.save(newDeployment)

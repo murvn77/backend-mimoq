@@ -10,19 +10,15 @@ import {
 } from 'class-validator';
 
 export class CreateDeploymentDto {
-    @IsNotEmpty({message: 'El nombre es obligatorio'})
+    @IsNotEmpty({message: 'El nombre de la aplicación para Helmes obligatorio'})
     @IsString()
     @ApiProperty()
-    readonly nombre: string;
-    // @IsNotEmpty({message: 'La cantidad de réplicas es obligatoria'})
-    // @IsNumber({}, {each: true})
-    // @ApiProperty()
-    // readonly cant_replicas: number;
+    readonly nombre_helm: string;
     @IsNotEmpty()
     @IsNumber({}, {each: true})
     @ApiProperty()
     readonly replicas: number[];
-    @IsOptional() // Cantidad de pods puede ser vacio inicialmente
+    @IsOptional()
     @IsNumber()
     @IsPositive()
     @ApiProperty()

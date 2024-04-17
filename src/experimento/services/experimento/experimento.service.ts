@@ -10,6 +10,8 @@ import { MetricaService } from 'src/metrica/services/metrica/metrica.service';
 import { CargaService } from '../carga/carga.service';
 import { Experimento } from 'src/experimento/entities/experimento.entity';
 import { Metrica } from 'src/metrica/entities/metrica.entity';
+import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
+import { Carga } from 'src/experimento/entities/carga.entity';
 
 @Injectable()
 export class ExperimentoService {
@@ -24,7 +26,9 @@ export class ExperimentoService {
 
   async findAll() {
     try {
-      return await this.experimentoRepo.find({});
+      return await this.experimentoRepo.find({
+        relations: ['carga', 'despliegues', 'metricas']
+      });
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
@@ -35,7 +39,10 @@ export class ExperimentoService {
 
   async findOne(id: number) {
     try {
-      const deployExperiment = await this.experimentoRepo.findOneBy({ id_experimento: id });
+      const deployExperiment = await this.experimentoRepo.findOne({
+        where: { id_experimento: id },
+        relations: ['carga', 'despliegues', 'metricas']
+      });
       if (!(deployExperiment instanceof Experimento)) {
         throw new NotFoundException(
           `Experimento con id #${id} no se encuentra en la Base de Datos`,
@@ -53,42 +60,65 @@ export class ExperimentoService {
   async createExperiment(data: CreateExperimentoDto) {
     try {
       const metrics: Metrica[] = [];
+      const deployments: Despliegue[] = [];
+
       for (const fk_id_metrica of data.fk_ids_metricas) {
         const metric = await this.metricaService.findOne(fk_id_metrica);
         if (!metric) throw new NotFoundException(`Metrica con id #${fk_id_metrica} no se encuentra en la Base de Datos`);
         metrics.push(metric);
       }
-      const deployment = await this.despliegueUtilsService.findOne(data.fk_id_despliegue);
+
+      // for (const fk_id_carga of data.fk_ids_cargas) {
+      //   const load = await this.cargaService.findOne(fk_id_carga);
+      //   if (!load) throw new NotFoundException(`Carga con id #${load} no se encuentra en la Base de Datos`);
+      //   loads.push(load);
+      // }
+
       const load = await this.cargaService.findOne(data.fk_id_carga);
 
-      if (!deployment) throw new NotFoundException(`Despliegue con id #${data.fk_id_despliegue} no se encuentra en la Base de Datos`);
-      if (!load) throw new NotFoundException(`Carga con id #${data.fk_id_carga} no se encuentra en la Base de Datos`);
-      if (!this.sumTimes(data.duracion, load.duracion_picos)) throw new BadRequestException(`La suma de los tiempos de carga no coincide con la duración total del experimento.`);
+      for (const fk_id_despliegue of data.fk_ids_despliegues) {
+        const deployment = await this.despliegueUtilsService.findOne(fk_id_despliegue);
+        if (!deployment) throw new NotFoundException(`Despliegue con id #${fk_id_despliegue} no se encuentra en la Base de Datos`);
+        deployments.push(deployment);
+      }
 
-      const ipCluster = '192.168.49.2'
-      const url = `http://${ipCluster}:${deployment.puerto}`
+      // const deployment = await this.despliegueUtilsService.findOne(data.fk_id_despliegue);
+      // const load = await this.cargaService.findOne(data.fk_id_carga);
+      // if (!deployment) throw new NotFoundException(`Despliegue con id #${data.fk_id_despliegue} no se encuentra en la Base de Datos`);
+      // if (!load) throw new NotFoundException(`Carga con id #${data.fk_id_carga} no se encuentra en la Base de Datos`);
 
-      const dirLoad = './utils/generate-load-k6/load_test.js';
-      console.log(`Genenerando carga en el microservicio que está en: ${url}`);
+      // if (!this.sumTimes(data.duracion, load.duracion_picos)) throw new BadRequestException(`La suma de los tiempos de carga no coincide con la duración total del experimento.`);
 
-      let files: string[] = [];
+      for (let i = 0; i < deployments.length; i++) {
+        const ipCluster = '172.17.0.1'
+        const url = `http://${ipCluster}:${deployments[i].puerto}`
 
-      for (let i = 1; i <= data.cantidad_replicas; i++) {
-        const out = `./utils/test-results-${i}.csv`;
-        const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS=${load.cant_usuarios} -e DURATION=${load.duracion_picos} -e ENDPOINTS="/" -e DELIMITER="," ${dirLoad}`
-        await this.executeCommand(loadCommand);
+        const dirLoad = './utils/generate-load-k6/load_test.js';
+        console.log(`Genenerando carga en el microservicio que está en: ${url}`);
 
-        const contenidoCSV = fs.readFileSync(out, 'utf8');
+        let files: string[] = [];
 
-        files.push(contenidoCSV);
+        console.log("LOAD DURATION: " + load.duracion_picos[i]);
+        console.log("LOAD DURATION: " + load.cant_usuarios[i]);
 
-        console.log('FIles...', files[i]);
-        console.log(`Generó carga. Réplica ${i} del experimento terminada.`);
+
+        for (let i = 1; i <= data.cant_replicas; i++) {
+          const out = `./utils/test-results-${i}.csv`;
+          const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[i]}" -e DELIMITER="," ${dirLoad}`
+          await this.executeCommand(loadCommand);
+
+          const contenidoCSV = fs.readFileSync(out, 'utf8');
+
+          files.push(contenidoCSV);
+
+          console.log('FIles...', files[i]);
+          console.log(`Generó carga. Réplica ${i} del experimento terminada.`);
+        }
       }
 
       const newExperiment = this.experimentoRepo.create(data);
 
-      newExperiment.despliegue = deployment;
+      newExperiment.despliegues = deployments;
       newExperiment.metricas = metrics;;
       newExperiment.carga = load;
       // newExperiment.resultado = files;

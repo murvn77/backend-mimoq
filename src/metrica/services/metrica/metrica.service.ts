@@ -58,11 +58,11 @@ export class MetricaService {
 
     async createMetrica(data: CreateMetricaDto) {
         try {
-            const metrica = await this.findOneByName(data.nombre);
+            // const metrica = await this.findOneByName(data.nombre);
 
-            if (metrica) throw new BadRequestException(
-                `Metrica "${data.nombre}" ya se encuentra registrada en la Base de Datos`,
-            );
+            // if (metrica) throw new BadRequestException(
+            //     `Metrica "${data.nombre}" ya se encuentra registrada en la Base de Datos`,
+            // );
 
             const newMetrica = this.metricaRepo.create(data);
 

@@ -38,9 +38,9 @@ export class DespliegueIndividualService {
         
         const existingDeployment = await this.despliegueRepo.findOne({
             where: {
-                nombre: data.nombre,
+                nombre_helm: data.nombre_helm,
                 cant_pods: data.cant_pods,
-                namespace: data.nombre,
+                namespace: data.namespace,
                 proyecto: proyecto
             }
         });
@@ -160,7 +160,7 @@ cantReplicas:`;
             this.puertosExposeApps = [];
             this.imagenesDespliegues = [];
 
-            return await this.despliegueUtilsService.deployApp(data.nombre, yamlContent);
+            return await this.despliegueUtilsService.deployApp(data.nombre_helm, yamlContent);
         } catch (error) {
             console.error(`Error en buildAndPushImage: ${error.message}`);
             return false;

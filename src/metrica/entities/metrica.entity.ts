@@ -15,7 +15,7 @@ export class Metrica {
     descripcion: string;
 
     @Column({ type: 'varchar', length: 200 })
-    formular: string;
+    formula: string;
 
     @ManyToOne(() => Subatributo, (subatributo) => subatributo.metricas, {
         nullable: false,

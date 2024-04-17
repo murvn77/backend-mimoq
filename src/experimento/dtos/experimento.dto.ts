@@ -16,21 +16,20 @@ export class CreateExperimentoDto {
   @IsNumber()
   @IsPositive()
   @ApiProperty()
-  readonly cantidad_replicas: number;
+  readonly cant_replicas: number;
   @IsNotEmpty()
   @IsArray()
   @ApiProperty()
   readonly endpoints: string[];
-  @IsNotEmpty({ message: 'La FL del despliegue es obligatoria' })
-  @IsNumber()
-  @IsPositive()
+  @IsNotEmpty({ message: 'Las FKs de los despliegues son obligatorios' })
+  @IsNumber({}, {each: true})
   @ApiProperty()
-  readonly fk_id_despliegue: number;
-  @IsNotEmpty({ message: 'La FK del experimento es obligatoria' })
+  readonly fk_ids_despliegues: number[];
+  @IsNotEmpty({ message: 'Las FKs de las métricas son obligatorias' })
   @IsNumber({}, {each: true})
   @ApiProperty()
   readonly fk_ids_metricas: number[];
-  @IsNotEmpty({ message: 'La FK de la carga es obligatoria' })
+  @IsNotEmpty({ message: 'El FK de la carga es obligatoria' })
   @IsNumber()
   @IsPositive()
   @ApiProperty()
