@@ -10,9 +10,13 @@ export class CreateMetricaDto {
     @IsString()
     @ApiProperty()
     readonly descripcion: string;
-    @IsNotEmpty({message: 'El FK del atributo es obligatorio'})
+    @IsNotEmpty({ message: 'La fórmula es obligatoria' })
+    @IsString()
+    @ApiProperty()
+    readonly formula: string;
+    @IsNotEmpty({message: 'El FK del subatributo es obligatorio'})
     @IsNumber()
     @IsPositive()
     @ApiProperty()
-    readonly fk_id_atributo: number;
+    readonly fk_id_subatributo: number;
 }

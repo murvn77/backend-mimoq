@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsPositive, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-export class CreateAtributoDto {
+export class CreateSubatributoDto {
   @IsNotEmpty({ message: 'El nombre es obligatorio' })
   @IsString()
   @ApiProperty()
@@ -10,9 +10,4 @@ export class CreateAtributoDto {
   @IsString()
   @ApiProperty()
   readonly descripcion: string;
-  @IsNotEmpty({message: 'El FK del atributo es obligatorio'})
-  @IsNumber()
-  @IsPositive()
-  @ApiProperty()
-  readonly fk_id_atributo: number;
 }

@@ -1,5 +1,6 @@
 import { OneToMany, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { Metrica } from './metrica.entity';
+import { Subatributo } from './subatributo.entity';
 
 @Entity()
 export class Atributo {
@@ -9,6 +10,9 @@ export class Atributo {
     @Column({ type: 'varchar', length: 50 })
     nombre: string;
 
-    @OneToMany(() => Metrica, (metrica) => metrica.atributo)
-    metricas: Metrica[];
+    @Column({ type: 'varchar', length: 200 })
+    descripcion: string;
+
+    @OneToMany(() => Subatributo, (subatributo) => subatributo.atributo)
+    subatributos: Subatributo[];
 }

@@ -1,6 +1,7 @@
 import { OneToMany, Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Atributo } from './atributo.entity';
 import { Experimento } from 'src/experimento/entities/experimento.entity';
+import { Subatributo } from './subatributo.entity';
 
 @Entity()
 export class Metrica {
@@ -10,12 +11,15 @@ export class Metrica {
     @Column({ type: 'varchar', length: 50 })
     nombre: string;
 
-    @Column({ type: 'varchar', length: 250 })
+    @Column({ type: 'varchar', length: 500 })
     descripcion: string;
 
-    @ManyToOne(() => Atributo, (atributo) => atributo.metricas, {
+    @Column({ type: 'varchar', length: 200 })
+    formular: string;
+
+    @ManyToOne(() => Subatributo, (subatributo) => subatributo.metricas, {
         nullable: false,
     })
-    @JoinColumn({ name: 'fk_id_atributo' })
-    atributo: Atributo;
+    @JoinColumn({ name: 'fk_id_subatributo' })
+    subatributo: Subatributo;
 }

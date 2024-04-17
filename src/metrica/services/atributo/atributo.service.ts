@@ -43,7 +43,7 @@ export class AtributoService {
         try {
             const atributo = await this.atributoRepo.findOne({
                 where: { nombre: nombre },
-                relations: ['metricas'],
+                relations: ['subatributos', 'subatributos.metricas'],
             });
             if (!atributo) {
                 throw new NotFoundException(
