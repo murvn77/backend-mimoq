@@ -46,10 +46,6 @@ export class DespliegueMultipleService {
 
     /** Revisa si los microservicios están en un mismo repo o no */
     async validateProjectToDeploy(data: CreateDeploymentDto) {
-        // const removeTempRepo = `rm -rf utils/temp-repo*`;
-        // await this.despliegueUtilsService.executeCommand(removeTempRepo);
-        // console.log(`Eliminando carpeta temporal antes del despliegue`);
-        
         const proyecto = await this.proyectoService.findOne(data.fk_proyecto);
 
         if (!proyecto) {
@@ -58,16 +54,12 @@ export class DespliegueMultipleService {
 
         const existingDeployment = await this.despliegueRepo.findOne({
             where: {
-                // cant_replicas: data.cant_replicas,
-                nombre: data.nombre_helm,
-                cant_pods: data.cant_pods,
-                namespace: data.namespace,
-                proyecto: proyecto
+                nombre_helm: data.nombre_helm,
             }
         });
 
         if (existingDeployment) {
-            throw new InternalServerErrorException(`Este despliegue ya está registrado en la base de datos`);
+            throw new InternalServerErrorException(`El despliegue con nombre ${data.nombre_helm} ya está registrado en la base de datos`);
         }
 
         const tempDir = `./utils/temp-repo-${Date.now()}`;
@@ -85,7 +77,7 @@ export class DespliegueMultipleService {
                 /**
                  * Docker compose con servicios que tienen image o build
                  */
-                return await this.pullAndPushImageFromDockerCompose(proyecto, data, tempDir); 
+                return await this.pullAndPushImageFromDockerCompose(proyecto, data, tempDir);
             }
         }
     }
@@ -190,7 +182,7 @@ export class DespliegueMultipleService {
 
         for (const container of imagesToBuild) {
             const imageName = container.image;
-            const containerName = container.container_name; 
+            const containerName = container.container_name;
             const imageLocalRegistry = `${localRegistry}/${imageName}`;
             console.log(`Desplegando el contenedor con nombre: ${container.name}`)
 
@@ -257,7 +249,7 @@ cantReplicas:`;
             for (let i = 0; i < data.replicas.length; i++) {
                 yamlContent += `
   - ${data.replicas[i]}`;
-            }            
+            }
 
         console.log('YML CONTENT: ', yamlContent);
 

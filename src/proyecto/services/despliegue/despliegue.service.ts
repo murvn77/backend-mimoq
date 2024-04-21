@@ -58,16 +58,14 @@ export class DespliegueService {
     return despliegue;
   }
 
-  async findOneByImage(usu_img: string, nom_img: string, tag_img: string) {
+  async findOneByHelmName(name: string) {
     return await this.despliegueRepo.findOne({
-      // where: {
-      //   usuario_img: usu_img,
-      //   nombre_img: nom_img,
-      //   tag_img: tag_img,
-      // }
+      where: {
+        nombre_helm: name,
+      }
     });
-  } 
-  
+  }
+
   private async isPortInUse(port: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const server = net.createServer()

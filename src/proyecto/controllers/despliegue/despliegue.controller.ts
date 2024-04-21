@@ -30,9 +30,9 @@ export class DespliegueController {
     //     return this.despliegueService.findAllByProject(id);
     // }
 
-    @Get('image/usuarioImg/:usuario/nombreImg/:nombre/tagImg/:tag')
-    findOneByImage(@Param('usuario') usuario: string, @Param('nombre') nombre: string, @Param('tag') tag: string) {
-        return this.despliegueService.findOneByImage(usuario, nombre, tag);
+    @Get('nombreHelm/:nombre')
+    findOneByHelmName(@Param('nombre') nombre: string) {
+        return this.despliegueService.findOneByHelmName(nombre);
     }
 
     @Post('individual')
@@ -55,8 +55,8 @@ export class DespliegueController {
         return this.despliegueService.updateDeployment(id, payload);
     }
 
-    @Delete(':id/labelk8s/:nombreLabelk8s')
-    removeDeployment(@Param('id', ParseIntPipe) id: number, @Param('nombreLabelk8s') nombreLabelk8s: string) {
-        return this.despliegueService.removeDeployment(id, nombreLabelk8s);
+    @Delete(':id/nombreHelm/:nombre')
+    removeDeployment(@Param('id', ParseIntPipe) id: number, @Param('nombre') nombre: string) {
+        return this.despliegueService.removeDeployment(id, nombre);
     }
 }
