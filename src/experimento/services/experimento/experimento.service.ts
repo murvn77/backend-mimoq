@@ -68,12 +68,6 @@ export class ExperimentoService {
         metrics.push(metric);
       }
 
-      // for (const fk_id_carga of data.fk_ids_cargas) {
-      //   const load = await this.cargaService.findOne(fk_id_carga);
-      //   if (!load) throw new NotFoundException(`Carga con id #${load} no se encuentra en la Base de Datos`);
-      //   loads.push(load);
-      // }
-
       const load = await this.cargaService.findOne(data.fk_id_carga);
 
       for (const fk_id_despliegue of data.fk_ids_despliegues) {
@@ -82,12 +76,11 @@ export class ExperimentoService {
         deployments.push(deployment);
       }
 
-      // const deployment = await this.despliegueUtilsService.findOne(data.fk_id_despliegue);
-      // const load = await this.cargaService.findOne(data.fk_id_carga);
-      // if (!deployment) throw new NotFoundException(`Despliegue con id #${data.fk_id_despliegue} no se encuentra en la Base de Datos`);
-      // if (!load) throw new NotFoundException(`Carga con id #${data.fk_id_carga} no se encuentra en la Base de Datos`);
-
-      // if (!this.sumTimes(data.duracion, load.duracion_picos)) throw new BadRequestException(`La suma de los tiempos de carga no coincide con la duración total del experimento.`);
+      const buildCommand = `kubectl get pod | grep "Running" | wc -l`;
+      const buildCOmmando2 = `kubectl get pods -o=json | jq -r '.items[] | select(any(.status.containerStatuses[]; .state.running)) | .metadata.labels.app'`;
+      const { stdout, stderr } = await this.despliegueUtilsService.executeCommand(buildCommand);
+      const numberOfRunningPods = parseInt(stdout.trim()); // Convertir la salida a un número entero
+      console.log(`Número de pods en estado "Running": ${numberOfRunningPods}`);
 
       for (let i = 0; i < deployments.length; i++) {
         const ipCluster = '172.17.0.1'
