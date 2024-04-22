@@ -14,12 +14,15 @@ export class Experimento {
     @Column({ type: 'integer' })
     cant_replicas: number;
 
-    @Column('varchar', { array: true })    
+    @Column('varchar', { array: true })
     endpoints: string[];
 
     // @ManyToOne(() => Despliegue, (despliegue) => despliegue.experimentos)
     // @JoinColumn({ name: 'fk_id_despliegue' })
     // despliegue: Despliegue;
+
+    @Column('varchar', { array: true, nullable: true })
+    resultado: string[];
 
     @ManyToOne(() => Carga, (carga) => carga.experimentos)
     @JoinColumn({ name: 'fk_id_carga' })

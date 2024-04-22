@@ -61,6 +61,7 @@ export class ExperimentoService {
     try {
       const metrics: Metrica[] = [];
       const deployments: Despliegue[] = [];
+      let files: string[] = [];
 
       for (const fk_id_metrica of data.fk_ids_metricas) {
         const metric = await this.metricaService.findOne(fk_id_metrica);
@@ -82,30 +83,31 @@ export class ExperimentoService {
       const numberOfRunningPods = parseInt(stdout.trim()); // Convertir la salida a un número entero
       console.log(`Número de pods en estado "Running": ${numberOfRunningPods}`);
 
+
       for (let i = 0; i < deployments.length; i++) {
-        const ipCluster = '172.17.0.1'
+        const ipCluster = '192.168.49.2'
         const url = `http://${ipCluster}:${deployments[i].puerto}`
 
         const dirLoad = './utils/generate-load-k6/load_test.js';
         console.log(`Genenerando carga en el microservicio que está en: ${url}`);
 
-        let files: string[] = [];
+        files = [];
 
         console.log("LOAD DURATION: " + load.duracion_picos[i]);
         console.log("LOAD DURATION: " + load.cant_usuarios[i]);
 
 
-        for (let i = 1; i <= data.cant_replicas; i++) {
-          const out = `./utils/test-results-${i}.csv`;
-          const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[i]}" -e DELIMITER="," ${dirLoad}`
+        for (let j = 0; j < data.cant_replicas; j++) {
+          const out = `./utils/test-results-${i}-${j}.csv`;
+          const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS="${load.cant_usuarios[j]}" -e DURATION="${load.duracion_picos[j]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," ${dirLoad}`
           await this.executeCommand(loadCommand);
 
           const contenidoCSV = fs.readFileSync(out, 'utf8');
 
           files.push(contenidoCSV);
 
-          console.log('FIles...', files[i]);
-          console.log(`Generó carga. Réplica ${i} del experimento terminada.`);
+          // console.log('FIles...', files[i]);
+          console.log(`Generó carga. Réplica ${i+1} del experimento terminada.`);
         }
       }
 
