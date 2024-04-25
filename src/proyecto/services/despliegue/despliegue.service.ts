@@ -36,7 +36,7 @@ export class DespliegueService {
   }
 
   async findOneByHelmName(name: string) {
-    return await this.despliegueRepo.findOne({
+    return await this.despliegueRepo.find({
       where: {
         nombre_helm: name,
       }
