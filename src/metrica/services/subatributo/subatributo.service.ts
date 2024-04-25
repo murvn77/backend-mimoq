@@ -15,9 +15,7 @@ export class SubatributoService {
 
   async find() {
     try {
-      return await this.subatributoRepo.find({
-        relations: ['atributo']
-      });
+      return await this.subatributoRepo.find();
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
@@ -30,7 +28,6 @@ export class SubatributoService {
     try {
       const subatributo = await this.subatributoRepo.findOne({
         where: { id_subatributo: id },
-        relations: ['atributo'],
       });
       if (!(subatributo instanceof Subatributo)) {
         throw new NotFoundException(

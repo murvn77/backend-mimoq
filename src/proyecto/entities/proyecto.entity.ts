@@ -16,10 +16,10 @@ export class Proyecto {
     @Column({ type: 'varchar', length: 150, nullable: true})
     url_repositorio: string;
 
-    @Column('varchar', { array: true, nullable: true })    
+    @Column('varchar', { array: true, nullable: true })
     urls_repositorios: string[];
 
-    @Column('varchar', { array: true, nullable: true })    
+    @Column('varchar', { array: true, nullable: true })
     nombres_microservicios: string[];
 
     @Column({ type: 'boolean' })
@@ -27,6 +27,15 @@ export class Proyecto {
 
     @Column({ type: 'boolean' })
     dockerfile: boolean;
+
+    @Column('varchar', { array: true, nullable: true })
+    imagenes_deploy: string[];
+
+    @Column('integer', { array: true, nullable: true })
+    puertos_imagenes: number[];
+
+    @Column('integer', { array: true, nullable: true })
+    puertos_deploy: number[];
 
     @ManyToOne(() => Usuario, (usuario) => usuario.proyectos)
     @JoinColumn({ name: 'fk_usuario' })

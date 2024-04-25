@@ -135,9 +135,9 @@ export class ProyectoService {
         const imagesToBuild = this.dockerImageParameters(composeData);
 
         namesApp = imagesToBuild.map(container => {
-          const index = container.image.indexOf("/");
-          let nameApp = container.image.substring(index + 1);
-          return nameApp = `${nameApp.toLowerCase().replace(/\s/g, '-')}`;
+          const index = container.container_name.indexOf("/");
+          let nameApp = container.container_name.substring(index + 1);
+          return `${nameApp.toLowerCase().replace(/\s/g, '-')}`;
         })
 
         newProject.nombres_microservicios = namesApp;
@@ -179,6 +179,7 @@ export class ProyectoService {
             name: serviceName,
             image: serviceConfig.image,
             port_expose: port1,
+            container_name: serviceConfig.container_name
           };
           kubernetesSpecs.push(kubernetesSpec);
         }

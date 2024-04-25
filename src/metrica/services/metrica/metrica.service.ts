@@ -15,9 +15,7 @@ export class MetricaService {
 
   async find() {
     try {
-      return await this.metricaRepo.find({
-        relations: ['subatributo', 'subatributo.atributo']
-      });
+      return await this.metricaRepo.find();
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(
@@ -30,7 +28,6 @@ export class MetricaService {
     try {
       const metrica = await this.metricaRepo.findOne({
         where: { id_metrica: id },
-        relations: ['subatributo', 'subatributo.atributo'],
       });
       if (!(metrica instanceof Metrica)) {
         throw new NotFoundException(

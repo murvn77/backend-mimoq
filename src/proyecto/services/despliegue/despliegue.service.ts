@@ -103,6 +103,7 @@ export class DespliegueService {
                             resolve(true);
                         }
                     });
+                    
                 } else {
                     console.log(`Despliegue exitoso: ${stdout}`);
                     resolve(true);

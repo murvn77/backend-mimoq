@@ -41,6 +41,8 @@ export class DespliegueMultipleService {
   constructor(
     @InjectRepository(Despliegue)
     private despliegueRepo: Repository<Despliegue>,
+    @InjectRepository(Proyecto)
+    private proyectoRepo: Repository<Proyecto>,
     private despliegueUtilsService: DespliegueService,
     private proyectoService: ProyectoService,
   ) { }
@@ -221,7 +223,7 @@ export class DespliegueMultipleService {
 
     this.puertosDespliegues.forEach(pt => {
       console.log('f:', pt);
-  });
+    });
     let yamlContent = `namespace: ${data.namespace}
 image:`;
 
@@ -277,8 +279,12 @@ cantReplicas:`;
       }
       this.puertosDespliegues.forEach(pt => {
         console.log('S:', pt);
-    });
+      });
 
+      proyecto.imagenes_deploy = this.imagenesDespliegues;
+      proyecto.puertos_imagenes = this.puertosExposeApps;
+      proyecto.puertos_deploy = this.puertosDespliegues;
+      await this.proyectoRepo.save(proyecto);
 
       this.imagenesDespliegues = [];
       this.nombresDespliegues = [];
@@ -369,4 +375,6 @@ done
       });
     });
   };
+
+  
 }
