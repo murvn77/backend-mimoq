@@ -1,10 +1,10 @@
 /** NestJS */
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 /** Dtos */
-import { CreateDeploymentDto } from 'src/proyecto/dtos/despliegue.dto';
+import { CreateDeploymentDto, UpdateDeploymentDto } from 'src/proyecto/dtos/despliegue.dto';
 
 /** Entities */
 import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
@@ -261,7 +261,7 @@ cantReplicas:`;
 
     await this.despliegueUtilsService.deployApp(data.nombre_helm, yamlContent);
 
-    const code = await this.executeInBackground();
+    const code = await this.executeInBackground(this.nombresDespliegues);
 
     if (code === 0) {
       for (let i = 0; i < imagesToBuild.length; i++) {
@@ -301,7 +301,7 @@ cantReplicas:`;
   }
 
 
-  executeInBackground = async () => {
+  executeInBackground = async (nombresDespliegues: string[]) => {
     return new Promise((resolve, reject) => {
       const timeoutSeconds = 300; // 5 minutos (en segundos)
       const startTime = Date.now();
@@ -338,7 +338,7 @@ cantReplicas:`;
       subprocess.stdin.write(`
 while true; do
   numberOfRunningPods=$(kubectl get pods -o=json | jq -r '.items[] | select(any(.status.containerStatuses[]; .state.running)) | .metadata.labels.app' | wc -l)
-  echo "Número de pods en estado 'Running': $numberOfRunningPods de ${this.nombresDespliegues.length}"
+  echo "Número de pods en estado 'Running': $numberOfRunningPods de ${nombresDespliegues.length}"
 
   if [[ ${this.nombresDespliegues.length} -le $numberOfRunningPods ]]; then
     echo "Condición cumplida. Saliendo del bucle."
@@ -376,5 +376,65 @@ done
     });
   };
 
-  
+  async updateDeployment(id: number, cambios: UpdateDeploymentDto) {
+    const despliegue = await this.despliegueRepo.findOneBy({ id_despliegue: id });
+    if (!despliegue) {
+      throw new NotFoundException(`Despliegue con id #${id} no se encuentra en la Base de Datos`);
+    }
+
+    const proyecto = await this.proyectoRepo.findOneBy({ id_proyecto: cambios.fk_proyecto });
+    if (!proyecto) {
+      throw new NotFoundException(`Proyecto con id #${id} no se encuentra en la Base de Datos`);
+    }
+
+    const imagenesDespliegues = proyecto.imagenes_deploy;
+    const puertosExposeApps = proyecto.puertos_imagenes;
+    const puertosDespliegues = proyecto.puertos_deploy;
+    const nombresDespliegues = proyecto.nombres_microservicios;
+
+let yamlContent = `namespace: ${cambios.namespace}
+image:`;
+
+    for (let i = 0; i < imagenesDespliegues.length; i++) {
+      yamlContent += `
+  - name: ${imagenesDespliegues[i]}
+    portExpose: ${puertosExposeApps[i]}`;
+    }
+
+    yamlContent += `
+nodePort:`;
+
+    for (let i = 0; i < puertosDespliegues.length; i++) {
+      yamlContent += `
+  - ${puertosDespliegues[i]}`;
+    }
+
+    yamlContent += `
+appName:`;
+
+    for (let i = 0; i < nombresDespliegues.length; i++) {
+      yamlContent += `
+  - ${nombresDespliegues[i]}`;
+    }
+
+    yamlContent += `
+cantReplicas:`;
+
+    for (let i = 0; i < cambios.replicas.length; i++) {
+      yamlContent += `
+  - ${cambios.replicas[i]}`;
+    }
+
+    console.log('YML CONTENT: ', yamlContent);
+    await this.despliegueUtilsService.deployApp(cambios.nombre_helm, yamlContent);
+    const code = await this.executeInBackground(nombresDespliegues);
+    if (code !== 0) {
+      throw new InternalServerErrorException(`Los microservicios no se desplegaron correctamente`);
+    }
+
+    // **HELM UPDATE* ///
+
+    this.despliegueRepo.merge(despliegue, cambios);
+    return await this.despliegueRepo.save(despliegue);
+  }
 }

@@ -103,7 +103,7 @@ export class DespliegueService {
                             resolve(true);
                         }
                     });
-                    
+
                 } else {
                     console.log(`Despliegue exitoso: ${stdout}`);
                     resolve(true);
@@ -138,6 +138,7 @@ export class DespliegueService {
 
   async updateDeployment(id: number, cambios: UpdateDeploymentDto) {
     const despliegue = await this.despliegueRepo.findOneBy({ id_despliegue: id });
+    
 
     // **HELM UPDATE* ///
 

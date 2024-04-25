@@ -46,17 +46,4 @@ export class CreateProjectDto {
   readonly fk_usuario: number;
 }
 
-export class UpdateProjectDto extends PartialType(CreateProjectDto) {
-  @IsOptional()
-  @IsArray()
-  @ApiProperty()
-  readonly imagen_deploy: string[];
-  @IsOptional()
-  @IsNumber({}, { each: true })
-  @ApiProperty()
-  readonly puerto_imagen: number[];
-  @IsOptional()
-  @IsNumber({}, { each: true })
-  @ApiProperty()
-  readonly puerto_deploy: number[];
-}
+export class UpdateProjectDto extends PartialType(CreateProjectDto) {}

@@ -52,7 +52,7 @@ export class DespliegueController {
         @Param('id', ParseIntPipe) id: number,
         @Body() payload: UpdateDeploymentDto,
     ) {
-        return this.despliegueService.updateDeployment(id, payload);
+        return this.despliegueMultipleService.updateDeployment(id, payload);
     }
 
     @Delete(':id/nombreHelm/:nombre')
