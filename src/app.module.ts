@@ -11,6 +11,7 @@ import { ProyectoModule } from './proyecto/proyecto.module';
 import { ExperimentoModule } from './experimento/experimento.module';
 import { AuthModule } from './auth/auth.module';
 import { enviroments } from './enviroments';
+import { DevtoolsModule } from '@nestjs/devtools-integration';
 
 @Module({
   imports: [
@@ -32,6 +33,9 @@ import { enviroments } from './enviroments';
     ProyectoModule,
     ExperimentoModule,
     AuthModule,
+    DevtoolsModule.register({
+      http: process.env.NODE_ENV !== 'production'
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
