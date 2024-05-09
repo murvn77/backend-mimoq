@@ -423,6 +423,7 @@ cantReplicas:`;
     for (let i = 0; i < cambios.replicas.length; i++) {
       yamlContent += `
   - ${cambios.replicas[i]}`;
+      // UPDATE TO BD
     }
 
     console.log('YML CONTENT: ', yamlContent);

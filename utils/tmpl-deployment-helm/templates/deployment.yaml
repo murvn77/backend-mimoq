@@ -46,6 +46,8 @@ kind: Service
 metadata:
   name: {{ $appName }}
   namespace: {{ $namespace }}
+  labels:
+    job: node-api
 spec:
   type: NodePort
   selector:
@@ -56,3 +58,21 @@ spec:
     targetPort: {{ index (index $.Values.image $index) "portExpose" }}
     nodePort: {{ index $.Values.nodePort $index }}
 {{- end }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: api-service-monitor
+  namespace: {{ $namespace }}
+  labels:
+    release: prometheus
+    app: prometheus
+spec:
+  jobLabel: job
+  endpoints:
+    - interval: 2s
+      port: web
+      path: /swagger-stats/metrics
+  selector:
+    matchLabels:
+      app: api

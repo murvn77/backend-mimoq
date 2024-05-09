@@ -11,7 +11,6 @@ import { CargaService } from '../carga/carga.service';
 import { Experimento } from 'src/experimento/entities/experimento.entity';
 import { Metrica } from 'src/metrica/entities/metrica.entity';
 import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
-import { Carga } from 'src/experimento/entities/carga.entity';
 
 @Injectable()
 export class ExperimentoService {
@@ -78,45 +77,83 @@ export class ExperimentoService {
       }
 
       const buildCommand = `kubectl get pod | grep "Running" | wc -l`;
-      const buildCOmmando2 = `kubectl get pods -o=json | jq -r '.items[] | select(any(.status.containerStatuses[]; .state.running)) | .metadata.labels.app'`;
       const { stdout, stderr } = await this.despliegueUtilsService.executeCommand(buildCommand);
       const numberOfRunningPods = parseInt(stdout.trim()); // Convertir la salida a un número entero
       console.log(`Número de pods en estado "Running": ${numberOfRunningPods}`);
 
+      const metricsToPanels = metrics.map(metric => metric.nombre);
 
-      for (let i = 0; i < deployments.length; i++) {
-        const ipCluster = '192.168.49.2'
-        const url = `http://${ipCluster}:${deployments[i].puerto}`
+      console.log('METRICS TO PANELS: ', metricsToPanels)
 
-        const dirLoad = './utils/generate-load-k6/load_test.js';
-        console.log(`Genenerando carga en el microservicio que está en: ${url}`);
-
-        files = [];
-
-        console.log("LOAD DURATION: " + load.duracion_picos[i]);
-        console.log("LOAD DURATION: " + load.cant_usuarios[i]);
-
-
-        for (let j = 0; j < data.cant_replicas; j++) {
-          const out = `./utils/test-results-${i}-${j}.csv`;
-          const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS="${load.cant_usuarios[j]}" -e DURATION="${load.duracion_picos[j]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," ${dirLoad}`
-          await this.executeCommand(loadCommand);
-
-          const contenidoCSV = fs.readFileSync(out, 'utf8');
-
-          files.push(contenidoCSV);
-
-          // console.log('FIles...', files[i]);
-          console.log(`Generó carga. Réplica ${i+1} del experimento terminada.`);
+      // Leemos el contenido del archivo JSON que contiene todas las configuraciones de paneles
+      fs.readFile('./utils/build-charts-dash/panel_data.json', 'utf-8', async (err, dataFile) => {
+        if (err) {
+          console.error('Error al leer el archivo JSON:', err);
+          return;
         }
-      }
+
+        try {
+          // Parseamos el contenido JSON
+          const panels = JSON.parse(dataFile);
+
+          // Filtramos solo los paneles cuyos UIDs estén en la lista de UIDs seleccionados
+          const panelesSeleccionados = panels.filter((panel) => metricsToPanels.includes(panel.uid));
+
+          console.log('PANELES SELECTED: ', panelesSeleccionados)
+
+          for (let i = 0; i < deployments.length; i++) {
+            const ipCluster = '192.168.49.2'
+            const url = `http://${ipCluster}:${deployments[i].puerto}`
+            const dirLoad = './utils/generate-load-k6/load_test.js';
+            console.log(`Genenerando carga en el microservicio que está en: ${url}`);
+
+            files = [];
+
+            console.log("LOAD DURATION: " + load.duracion_picos[i]);
+            console.log("LOAD DURATION: " + load.cant_usuarios[i]);
+
+            for (let j = 0; j < data.cant_replicas; j++) {
+              const out = `./utils/test-results-${i}-${j}.csv`;
+              const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS="${load.cant_usuarios[j]}" -e DURATION="${load.duracion_picos[j]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," ${dirLoad}`
+              await this.executeCommand(loadCommand);
+
+              const contenidoCSV = fs.readFileSync(out, 'utf8');
+
+              files.push(contenidoCSV);
+
+              console.log(`Generó carga. Réplica ${i + 1} del experimento terminada.`);
+            }
+
+            panelesSeleccionados.forEach(panel => {
+              panel.targets[0].expr = `${deployments[i].nombre}{service="${deployments[i].nombre}"}`;
+            });
+
+            const nuevoJSON = JSON.stringify(panelesSeleccionados, null, 2);
+            console.log('NEW JSON: ', nuevoJSON)
+
+            fs.writeFile(`./utils/build-charts-dash/panel_new_${i}.json`, nuevoJSON, (err) => {
+              if (err) {
+                console.error('Error al guardar el service en el nuevo archivo JSON:', err);
+                return;
+              }
+              console.log(`El nuevo archivo JSON con el service para el despliegue ${i} se ha creado correctamente.`);
+            });
+
+            //DASH
+
+          }
+        } catch (error) {
+          console.error('Error al parsear el contenido JSON:', error);
+        }
+      });
+
+      // OR DASH HERE
+
 
       const newExperiment = this.experimentoRepo.create(data);
-
       newExperiment.despliegues = deployments;
       newExperiment.metricas = metrics;;
       newExperiment.carga = load;
-      // newExperiment.resultado = files;
 
       return this.experimentoRepo.save(newExperiment);
     } catch (error) {
