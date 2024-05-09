@@ -14,6 +14,10 @@ export class CreateMetricaDto {
     @IsString()
     @ApiProperty()
     readonly formula: string;
+    @IsNotEmpty({ message: 'La nombre de prometheus es obligatorio' })
+    @IsString()
+    @ApiProperty()
+    readonly nombre_prometheus: string;
     @IsNotEmpty({message: 'El FK del subatributo es obligatorio'})
     @IsNumber()
     @IsPositive()
