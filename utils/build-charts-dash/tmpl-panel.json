@@ -1,6 +1,6 @@
 [
   {
-    "uid": "m1",
+    "uid": "Memoria Total",
     "datasource": {
       "type": "prometheus",
       "": "prometheus"
@@ -100,7 +100,7 @@
     "type": "timeseries"
   },
   {
-    "uid": "panel-uid-3",
+    "uid": "Memoria Libre",
     "datasource": {
       "type": "prometheus",
       "": "prometheus"
@@ -200,7 +200,7 @@
     "type": "timeseries"
   },
   {
-    "uid": "m2",
+    "uid": "Uso de memoria en un nodo",
     "datasource": {
       "type": "prometheus",
       "": "prometheus"

@@ -20,6 +20,9 @@ export class Metrica {
     @Column({ type: 'varchar', length: 100 })
     nombre_prometheus: string;
 
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    grupo: string;
+
     @ManyToOne(() => Subatributo, (subatributo) => subatributo.metricas, {
         nullable: false,
     })

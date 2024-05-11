@@ -11,6 +11,10 @@ export class CreateExperimentoDto {
   @IsNotEmpty()
   @IsString()
   @ApiProperty()
+  readonly nombre: string;
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty()
   readonly duracion: string;
   @IsNotEmpty()
   @IsNumber()

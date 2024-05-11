@@ -1,0 +1,25 @@
+{
+  "dashboard": {
+    "id": 0,
+    "version" :0,
+    "uid": "example-dashboard232",
+    "title": "HOLAYOSOYKEVIN3333",
+    "timezone": "browser",
+    "panels": [
+      {
+        "uid": "panel-uid-1",
+        "datasource": {
+          "type": "prometheus",
+          "": "prometheus"
+        }
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "5s"
+  },
+  "folderId": null,
+  "overwrite": false
+}

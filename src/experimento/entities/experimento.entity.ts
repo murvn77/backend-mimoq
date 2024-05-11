@@ -8,6 +8,9 @@ export class Experimento {
     @PrimaryGeneratedColumn()
     id_experimento: number;
 
+    @Column({ type: 'varchar', length: 70, nullable: true })
+    nombre: string;
+
     @Column({ type: 'varchar', length: 5 })
     duracion: string;
 
@@ -17,12 +20,8 @@ export class Experimento {
     @Column('varchar', { array: true })
     endpoints: string[];
 
-    // @ManyToOne(() => Despliegue, (despliegue) => despliegue.experimentos)
-    // @JoinColumn({ name: 'fk_id_despliegue' })
-    // despliegue: Despliegue;
-
     @Column('varchar', { array: true, nullable: true })
-    resultado: string[];
+    nombres_archivos: string[];
 
     @ManyToOne(() => Carga, (carga) => carga.experimentos)
     @JoinColumn({ name: 'fk_id_carga' })
@@ -31,10 +30,6 @@ export class Experimento {
     @ManyToMany(() => Despliegue)
     @JoinTable()
     despliegues: Despliegue[];
-
-    // @ManyToMany(() => Carga)
-    // @JoinTable()
-    // cargas: Carga[];
 
     @ManyToMany(() => Metrica)
     @JoinTable()

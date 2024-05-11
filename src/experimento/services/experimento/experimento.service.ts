@@ -1,16 +1,18 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { Repository } from 'typeorm';
 import { DespliegueService } from 'src/proyecto/services/despliegue/despliegue.service';
 
 import * as fs from 'fs';
+import * as path from 'path';
 import { CreateExperimentoDto, UpdateExperimentoDto } from 'src/experimento/dtos/experimento.dto';
 import { MetricaService } from 'src/metrica/services/metrica/metrica.service';
 import { CargaService } from '../carga/carga.service';
 import { Experimento } from 'src/experimento/entities/experimento.entity';
 import { Metrica } from 'src/metrica/entities/metrica.entity';
 import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
+import { Console } from 'console';
 
 @Injectable()
 export class ExperimentoService {
@@ -60,7 +62,20 @@ export class ExperimentoService {
     try {
       const metrics: Metrica[] = [];
       const deployments: Despliegue[] = [];
-      let files: string[] = [];
+      const basePath = './utils/resultados-experimentos';
+      let nombres_archivos: string[] = [];
+      let files: string[];
+      const newExperiment = this.experimentoRepo.create(data);
+      const formattedName = data.nombre.toLowerCase().replace(/\s+/g, '-');
+
+      const directoryPath = path.join(basePath, formattedName);
+
+      if (!fs.existsSync(directoryPath)) {
+        fs.mkdirSync(directoryPath);
+        console.log(`Directorio '${formattedName}' creado en '${basePath}'.`);
+      } else {
+        console.log(`El directorio '${formattedName}' ya existe en '${basePath}'.`);
+      }
 
       for (const fk_id_metrica of data.fk_ids_metricas) {
         const metric = await this.metricaService.findOne(fk_id_metrica);
@@ -85,72 +100,19 @@ export class ExperimentoService {
 
       console.log('METRICS TO PANELS: ', metricsToPanels)
 
-      // Leemos el contenido del archivo JSON que contiene todas las configuraciones de paneles
-      fs.readFile('./utils/build-charts-dash/panel_data.json', 'utf-8', async (err, dataFile) => {
-        if (err) {
-          console.error('Error al leer el archivo JSON:', err);
-          return;
+      for (let i = 0; i < deployments.length; i++) {
+        // Resto del código...
+        const nombres_archivos = await this.generateLoadAndManipulatePanels(metricsToPanels, deployments, load, data, directoryPath, i, newExperiment);
+        console.log('se queda aquí... i');
+        if (!newExperiment.nombres_archivos) {
+          newExperiment.nombres_archivos = []; // Inicializa la propiedad si aún no está definida
         }
+        newExperiment.nombres_archivos = newExperiment.nombres_archivos.concat(nombres_archivos);
 
-        try {
-          // Parseamos el contenido JSON
-          const panels = JSON.parse(dataFile);
+      }
 
-          // Filtramos solo los paneles cuyos UIDs estén en la lista de UIDs seleccionados
-          const panelesSeleccionados = panels.filter((panel) => metricsToPanels.includes(panel.uid));
+      console.log('NEW EXPERIMENT: 2 ', newExperiment.nombres_archivos);
 
-          console.log('PANELES SELECTED: ', panelesSeleccionados)
-
-          for (let i = 0; i < deployments.length; i++) {
-            const ipCluster = '192.168.49.2'
-            const url = `http://${ipCluster}:${deployments[i].puerto}`
-            const dirLoad = './utils/generate-load-k6/load_test.js';
-            console.log(`Genenerando carga en el microservicio que está en: ${url}`);
-
-            files = [];
-
-            console.log("LOAD DURATION: " + load.duracion_picos[i]);
-            console.log("LOAD DURATION: " + load.cant_usuarios[i]);
-
-            for (let j = 0; j < data.cant_replicas; j++) {
-              const out = `./utils/test-results-${i}-${j}.csv`;
-              const loadCommand = `k6 run --out csv=${out} -e API_URL=${url} -e VUS="${load.cant_usuarios[j]}" -e DURATION="${load.duracion_picos[j]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," ${dirLoad}`
-              await this.executeCommand(loadCommand);
-
-              const contenidoCSV = fs.readFileSync(out, 'utf8');
-
-              files.push(contenidoCSV);
-
-              console.log(`Generó carga. Réplica ${i + 1} del experimento terminada.`);
-            }
-
-            panelesSeleccionados.forEach(panel => {
-              panel.targets[0].expr = `${deployments[i].nombre}{service="${deployments[i].nombre}"}`;
-            });
-
-            const nuevoJSON = JSON.stringify(panelesSeleccionados, null, 2);
-            console.log('NEW JSON: ', nuevoJSON)
-
-            fs.writeFile(`./utils/build-charts-dash/panel_new_${i}.json`, nuevoJSON, (err) => {
-              if (err) {
-                console.error('Error al guardar el service en el nuevo archivo JSON:', err);
-                return;
-              }
-              console.log(`El nuevo archivo JSON con el service para el despliegue ${i} se ha creado correctamente.`);
-            });
-
-            //DASH
-
-          }
-        } catch (error) {
-          console.error('Error al parsear el contenido JSON:', error);
-        }
-      });
-
-      // OR DASH HERE
-
-
-      const newExperiment = this.experimentoRepo.create(data);
       newExperiment.despliegues = deployments;
       newExperiment.metricas = metrics;;
       newExperiment.carga = load;
@@ -164,53 +126,78 @@ export class ExperimentoService {
     }
   }
 
-  sumTimes(totalTime: string, timesString: string): boolean {
-    const totalTimeUnit = totalTime.charAt(totalTime.length - 1); // Obtener la unidad del totalTime
-    const totalSeconds = this.convertToSeconds(totalTime.substring(0, totalTime.length - 1), totalTimeUnit); // Convertir totalTime a segundos
+  private async generateLoadAndManipulatePanels(metricsToPanels: string[], deployments: Despliegue[], load: any, data: CreateExperimentoDto, directoryPath: string, i: number, newExperiment: Experimento) {
+    const ipCluster = '192.168.49.2';
+    const url = `http://${ipCluster}:${deployments[i].puerto}`;
+    const dirLoad = './utils/generate-load-k6/load_test.js';
+    console.log(`Generando carga en el microservicio que está en: ${url}`);
+    const files: string[] = [];
+    const nombres_archivos: string[] = [];
+    for (let j = 0; j < data.cant_replicas; j++) {
+      const out = `${directoryPath}/test-results-${deployments[i].nombre}-${i}-replica-${j}.json`;
+      const loadCommand = `k6 run --out json=${out} -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," -e SUMMARY="resultado-${deployments[i].nombre}-2.html" ${dirLoad}`;
 
-    const timesArray = timesString.split(',').map(time => time.trim()); // Dividir la cadena de tiempos en segmentos y eliminar espacios
+      console.log("LOAD COMMAND: ", loadCommand);
+      await this.executeCommand(loadCommand);
+      const contenidoJSON = fs.readFileSync(out, 'utf8');
+      files.push(contenidoJSON);
+      console.log(`Generó carga. Réplica ${i + 1} del experimento terminada.`);
+      nombres_archivos.push(`test-results-${deployments[i].nombre}-${i}-replica-${j}.json`);
+    }
 
-    let sumSeconds = 0;
-    let sumMinutes = 0;
+    const panelesSeleccionados = this.filterPanels(metricsToPanels, deployments[i].nombre);
+    this.updatePanelTargets(panelesSeleccionados, deployments[i]);
+    this.writePanelJSON(panelesSeleccionados, deployments[i], i);
 
-    // Iterar sobre cada elemento en la cadena de tiempos
-    timesArray.forEach(timeString => {
-      const unit = timeString.charAt(timeString.length - 1); // Obtener la unidad (s o m)
-      const value = parseInt(timeString.substring(0, timeString.length - 1)); // Obtener el valor numérico
-
-      if (unit === 's') {
-        sumSeconds += value;
-      } else if (unit === 'm') {
-        sumMinutes += value;
-      }
-    });
-
-    // Convertir minutos a segundos
-    sumSeconds += sumMinutes * 60;
-
-    // Verificar si la suma de los tiempos del array es igual al totalTime
-    return totalSeconds === sumSeconds;
+    return nombres_archivos;
   }
 
-  private convertToSeconds(value: string, unit: string): number {
-    if (unit === 's') {
-      return parseInt(value);
-    } else if (unit === 'm') {
-      return parseInt(value) * 60;
-    } else {
-      throw new Error('Unidad de tiempo no válida');
+  private filterPanels(metricsToPanels: string[], deploymentName: string): any[] {
+    const dataFile = fs.readFileSync('./utils/build-charts-dash/tmpl-panel.json', 'utf-8');
+    const panels = JSON.parse(dataFile);
+    return panels.filter((panel: any) => metricsToPanels.includes(panel.uid));
+  }
+
+  private updatePanelTargets(panels: any[], deployment: Despliegue) {
+    panels.forEach(panel => {
+      panel.targets[0].expr = `${deployment.nombre}{service="${deployment.nombre}"}`;
+    });
+  }
+
+  private writePanelJSON(panels: any[], deployment: Despliegue, index: number) {
+    const nuevoJSON = JSON.stringify(panels, null, 2);
+    fs.writeFile(`./utils/build-charts-dash/paneles-${deployment.nombre}-${index}.json`, nuevoJSON, (err) => {
+      if (err) {
+        console.error('Error al guardar el service en el nuevo archivo JSON:', err);
+        return;
+      }
+      console.log(`El nuevo archivo JSON con el service para el despliegue ${index} se ha creado correctamente.`);
+    });
+    this.addTOJSONDash(index, panels, deployment.nombre);
+  }
+
+
+  private async addTOJSONDash(index: number, panelesSeleccionados: any[], nombre: string) {
+    try {
+      const dataDashboard = await fs.promises.readFile('./utils/build-charts-dash/tmpl-tablero.json', 'utf-8');
+      const dashboard = JSON.parse(dataDashboard);
+      if (!dashboard.hasOwnProperty('panels')) {
+        dashboard.panels = [];
+      }
+      dashboard.panels.push(...panelesSeleccionados);
+      const nuevoDashboard = JSON.stringify(dashboard, null, 2);
+      await fs.promises.writeFile(`./utils/build-charts-dash/dash-${nombre}-${index}.json`, nuevoDashboard);
+      console.log(`El nuevo archivo JSON del dashboard ${index} se creó correctamente`);
+      console.log('se queda aquí? ')
+    } catch (error) {
+      console.error('Error al manipular archivos JSON:', error);
     }
   }
+
 
   async updateExperiment(id: number, cambios: UpdateExperimentoDto) {
     try {
       const deployExperiment = await this.experimentoRepo.findOneBy({ id_experimento: id });
-      // if (cambios.fk_estadoU) {
-      //     const estado = await this.estadoUsuarioService.findOne(
-      //         cambios.fk_estadoU,
-      //     );
-      //     user.estadoUsuario = estado;
-      // }
 
       this.experimentoRepo.merge(deployExperiment, cambios);
       return this.experimentoRepo.save(deployExperiment);
@@ -228,9 +215,27 @@ export class ExperimentoService {
 
   private async executeCommand(command: string): Promise<{ stdout: string, stderr: string }> {
     return new Promise((resolve, reject) => {
-      exec(command, (error, stdout, stderr) => {
-        if (error) {
-          reject(error);
+
+      const childProcess = spawn(command, { shell: true });
+
+      childProcess.on('error', (error) => {
+        reject(error);
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      childProcess.stdout.on('data', (data) => {
+        stdout += data;
+      });
+
+      childProcess.stderr.on('data', (data) => {
+        stderr += data;
+      });
+
+      childProcess.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Command exited with code ${code}`));
         } else {
           resolve({ stdout, stderr });
         }

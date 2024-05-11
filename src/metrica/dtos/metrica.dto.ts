@@ -18,6 +18,10 @@ export class CreateMetricaDto {
     @IsString()
     @ApiProperty()
     readonly nombre_prometheus: string;
+    @IsNotEmpty({ message: 'La nombre del grupo es obligatorio' })
+    @IsString()
+    @ApiProperty()
+    readonly grupo: string;
     @IsNotEmpty({message: 'El FK del subatributo es obligatorio'})
     @IsNumber()
     @IsPositive()

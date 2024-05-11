@@ -1,6 +1,7 @@
 import { check } from "k6";
 import { Counter } from "k6/metrics";
 import http from "k6/http";
+import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
 const BASE_URL = __ENV.API_URL || "https://api.example.com";
 // const VUS = parseInt(__ENV.VUS) || 10;
@@ -9,6 +10,7 @@ const stringDURATIONS = __ENV.DURATION || "30s";
 const endpointsString =
   __ENV.ENDPOINTS || "/defaultPath1,/defaultPath2,/defaultPath3";
 const delimiter = __ENV.DELIMITER || ",";
+const ARCHIVO = __ENV.SUMMARY || 'summary.html';
 const VUS = stringVUS.split(delimiter);
 const DURATIONS = stringDURATIONS.split(delimiter);
 const ENDPOINTS = endpointsString.split(delimiter);
@@ -81,7 +83,13 @@ export default function () {
   }
 }
 
-
+export function handleSummary(data) {
+  const summary = `${ARCHIVO}`;
+  console.log(`${ARCHIVO}`)
+  return {
+    [summary]: htmlReport(data),
+  };
+}
   // const responses = http.batch([
   //   ['GET', 'https://test.k6.io', null, { tags: { ctype: 'html' } }],
   //   ['GET', 'https://test.k6.io/style.css', null, { tags: { ctype: 'css' } }],

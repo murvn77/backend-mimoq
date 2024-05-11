@@ -14,6 +14,7 @@ import { Carga } from './entities/carga.entity';
 import { AtributoService } from 'src/metrica/services/atributo/atributo.service';
 import { Subatributo } from 'src/metrica/entities/subatributo.entity';
 import { SubatributoService } from 'src/metrica/services/subatributo/subatributo.service';
+import { TableroService } from './services/tablero/tablero.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -25,7 +26,7 @@ import { SubatributoService } from 'src/metrica/services/subatributo/subatributo
       Subatributo
     ]),
   ],
-  providers: [ExperimentoService, CargaService, DespliegueService, MetricaService, AtributoService, SubatributoService],
+  providers: [ExperimentoService, CargaService, DespliegueService, MetricaService, AtributoService, SubatributoService, TableroService],
   controllers: [ExperimentoController, CargaController],
 })
 export class ExperimentoModule {}
