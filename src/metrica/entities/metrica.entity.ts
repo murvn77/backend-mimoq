@@ -1,6 +1,4 @@
-import { OneToMany, Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Atributo } from './atributo.entity';
-import { Experimento } from 'src/experimento/entities/experimento.entity';
+import { Column, Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Subatributo } from './subatributo.entity';
 
 @Entity()
@@ -14,7 +12,7 @@ export class Metrica {
     @Column({ type: 'varchar', length: 500 })
     descripcion: string;
 
-    @Column({ type: 'varchar', length: 200 })
+    @Column({ type: 'varchar', length: 500, nullable: true })
     formula: string;
 
     @Column({ type: 'varchar', length: 100 })

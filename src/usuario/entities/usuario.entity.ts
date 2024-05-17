@@ -1,6 +1,6 @@
-import { Proyecto } from 'src/proyecto/entities/proyecto.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RolUsuario } from './rol-usuario.entity';
+import { Proyecto } from '../../proyecto/entities/proyecto.entity';
 
 @Entity()
 export class Usuario {

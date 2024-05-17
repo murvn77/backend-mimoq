@@ -1,10 +1,9 @@
 import { Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-
-import { Usuario } from 'src/usuario/entities/usuario.entity';
-import { AuthService } from 'src/auth/services/auth/auth.service';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { AuthService } from '../../services/auth/auth.service';
+import { Usuario } from '../../../usuario/entities/usuario.entity';
 
 @ApiTags('Auth')
 @Controller('auth')

@@ -1,9 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateMetricaDto } from 'src/metrica/dtos/metrica.dto';
-import { Metrica } from 'src/metrica/entities/metrica.entity';
 import { Repository } from 'typeorm';
 import { SubatributoService } from '../subatributo/subatributo.service';
+import { Metrica } from '../../entities/metrica.entity';
+import { CreateMetricaDto } from '../../dtos/metrica.dto';
 
 @Injectable()
 export class MetricaService {

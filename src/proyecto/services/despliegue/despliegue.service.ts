@@ -1,13 +1,13 @@
 /** NestJS */
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 /** Dtos */
-import { UpdateDeploymentDto } from 'src/proyecto/dtos/despliegue.dto';
+import { UpdateDeploymentDto } from '../../dtos/despliegue.dto';
 
 /** Entities */
-import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
+import { Despliegue } from '../../entities/despliegue.entity';
 
 /** Utils */
 import * as fs from 'fs-extra';
@@ -138,7 +138,7 @@ export class DespliegueService {
 
   async updateDeployment(id: number, cambios: UpdateDeploymentDto) {
     const despliegue = await this.despliegueRepo.findOneBy({ id_despliegue: id });
-    
+
 
     // **HELM UPDATE* ///
 

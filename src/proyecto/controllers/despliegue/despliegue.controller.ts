@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateDeploymentDto, UpdateDeploymentDto } from 'src/proyecto/dtos/despliegue.dto';
-import { DespliegueIndividualService } from 'src/proyecto/services/despliegue-individual/despliegue-individual.service';
-import { DespliegueMultipleService } from 'src/proyecto/services/despliegue-multiple/despliegue-multiple.service';
-import { DespliegueService } from 'src/proyecto/services/despliegue/despliegue.service';
+import { DespliegueService } from '../../services/despliegue/despliegue.service';
+import { DespliegueIndividualService } from '../../services/despliegue-individual/despliegue-individual.service';
+import { DespliegueMultipleService } from '../../services/despliegue-multiple/despliegue-multiple.service';
+import { CreateDeploymentDto, UpdateDeploymentDto } from '../../dtos/despliegue.dto';
 
 @ApiTags('Despliegue')
 @Controller('despliegue')

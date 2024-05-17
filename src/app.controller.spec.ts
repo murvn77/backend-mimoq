@@ -5,6 +5,14 @@ import { AppService } from './app.service';
 describe('AppController', () => {
   let appController: AppController;
 
+  const appServiceProvider = {
+    provide: AppService,
+    useFactory: () => ({
+      getHello: jest.fn(() => [])
+    })
+  }
+
+
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],

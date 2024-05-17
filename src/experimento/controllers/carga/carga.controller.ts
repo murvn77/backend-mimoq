@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateCargaDto, UpdateCargaDto } from 'src/experimento/dtos/carga.dto';
-import { CargaService } from 'src/experimento/services/carga/carga.service';
+import { CargaService } from '../../services/carga/carga.service';
+import { CreateCargaDto, UpdateCargaDto } from '../../dtos/carga.dto';
 
 @ApiTags('Carga')
 @Controller('carga')

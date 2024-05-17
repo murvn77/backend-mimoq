@@ -1,11 +1,11 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { Usuario } from 'src/usuario/entities/usuario.entity';
 import { Repository } from 'typeorm';
-import { CreateUsuarioDto, UpdateUsuarioDto } from 'src/usuario/dtos/usuario.dto';
 
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RolUsuarioService } from 'src/usuario/services/rol-usuario/rol-usuario.service';
+import { Usuario } from '../../entities/usuario.entity';
+import { RolUsuarioService } from '../rol-usuario/rol-usuario.service';
+import { CreateUsuarioDto, UpdateUsuarioDto } from '../../dtos/usuario.dto';
 
 @Injectable()
 export class UsuarioService {
@@ -17,7 +17,7 @@ export class UsuarioService {
 
   async build() {
     try {
-      
+
     } catch (error) {
       console.error(error);
       throw new InternalServerErrorException(

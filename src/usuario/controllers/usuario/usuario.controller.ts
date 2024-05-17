@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Inject, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateUsuarioDto, UpdateUsuarioDto } from 'src/usuario/dtos/usuario.dto';
-import { UsuarioService } from 'src/usuario/services/usuario/usuario.service';
+import { UsuarioService } from '../../services/usuario/usuario.service';
+import { CreateUsuarioDto, UpdateUsuarioDto } from '../../dtos/usuario.dto';
 
 @ApiTags('Usuario')
 @Controller('usuario')
@@ -26,7 +26,7 @@ export class UsuarioController {
     }
 
     @Post()
-    createUsuario(@Body() payload: CreateUsuarioDto) {
+    createUser(@Body() payload: CreateUsuarioDto) {
         console.log('Body en controller', payload);
         return this.usuarioService.createUser(payload);
     }

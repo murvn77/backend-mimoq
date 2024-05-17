@@ -1,15 +1,15 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
-import { Proyecto } from 'src/proyecto/entities/proyecto.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateProjectDto, UpdateProjectDto } from 'src/proyecto/dtos/proyecto.dto';
-import { UsuarioService } from 'src/usuario/services/usuario/usuario.service';
 
 import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
 import { DespliegueService } from '../despliegue/despliegue.service';
-import { Usuario } from 'src/usuario/entities/usuario.entity';
+import { Proyecto } from '../../entities/proyecto.entity';
+import { UsuarioService } from '../../../usuario/services/usuario/usuario.service';
+import { Usuario } from '../../../usuario/entities/usuario.entity';
+import { CreateProjectDto, UpdateProjectDto } from '../../dtos/proyecto.dto';
 
 interface ServiceConfig {
   image: string;

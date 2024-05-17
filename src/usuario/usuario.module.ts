@@ -10,11 +10,12 @@ import { RolUsuario } from './entities/rol-usuario.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Usuario, 
+      Usuario,
       RolUsuario
     ]),
   ],
   controllers: [UsuarioController, RolUsuarioController],
   providers: [UsuarioService, RolUsuarioService],
+  exports: [UsuarioService, RolUsuarioService]
 })
 export class UsuarioModule {}

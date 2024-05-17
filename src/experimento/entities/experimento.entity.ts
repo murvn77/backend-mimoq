@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
 import { Carga } from './carga.entity';
-import { Metrica } from 'src/metrica/entities/metrica.entity';
+import { Despliegue } from '../../proyecto/entities/despliegue.entity';
+import { Metrica } from '../../metrica/entities/metrica.entity';
 
 @Entity()
 export class Experimento {
@@ -22,6 +22,9 @@ export class Experimento {
 
     @Column('varchar', { array: true, nullable: true })
     nombres_archivos: string[];
+
+    @Column('varchar', { array: true, nullable: true })
+    iframes: string[];
 
     @ManyToOne(() => Carga, (carga) => carga.experimentos)
     @JoinColumn({ name: 'fk_id_carga' })

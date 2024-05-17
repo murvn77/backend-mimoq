@@ -1,0 +1,67 @@
+[
+  {
+    "uid": "http_req_failed",
+    "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+    },
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "fixedColor": "red",
+          "mode": "fixed"
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        },
+        "unit": "none"
+      },
+      "overrides": []
+    },
+    "gridPos": {
+      "h": 3,
+      "w": 6,
+      "x": 6,
+      "y": 12
+    },
+    "id": 22,
+    "options": {
+      "colorMode": "value",
+      "graphMode": "none",
+      "justifyMode": "auto",
+      "orientation": "auto",
+      "reduceOptions": {
+        "calcs": [],
+        "fields": "",
+        "values": false
+      },
+      "showPercentChange": false,
+      "textMode": "auto",
+      "wideLayout": true
+    },
+    "pluginVersion": "10.4.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "editorMode": "code",
+        "expr": "sum(k6_http_reqs_total{testid=\"elpepe\", expected_response=\"false\"})",
+        "instant": false,
+        "legendFormat": "__auto",
+        "range": true,
+        "refId": "A"
+      }
+    ],
+    "title": "HTTP request failures",
+    "type": "stat"
+  }
+]

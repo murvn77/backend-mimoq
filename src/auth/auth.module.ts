@@ -2,25 +2,24 @@ import { Module } from "@nestjs/common";
 import { ConfigType } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
-import config from "src/config";
-import { UsuarioModule } from "src/usuario/usuario.module";
-import { AuthService } from './services/auth/auth.service';
 import { AuthController } from './controllers/auth/auth.controller';
 import { LocalStrategy } from "./strategies/local.strategy";
 import { JwtStrategy } from "./strategies/jwt.strategy";
-import { UsuarioService } from "src/usuario/services/usuario/usuario.service";
-import { ProyectoModule } from "src/proyecto/proyecto.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Usuario } from "src/usuario/entities/usuario.entity";
-import { RolUsuario } from "src/usuario/entities/rol-usuario.entity";
-import { RolUsuarioService } from "src/usuario/services/rol-usuario/rol-usuario.service";
+import { UsuarioModule } from "../usuario/usuario.module";
+import { Usuario } from "../usuario/entities/usuario.entity";
+import { RolUsuario } from "../usuario/entities/rol-usuario.entity";
+import config from "../config";
+import { AuthService } from "./services/auth/auth.service";
+import { UsuarioService } from "../usuario/services/usuario/usuario.service";
+import { RolUsuarioService } from "../usuario/services/rol-usuario/rol-usuario.service";
 
 @Module({
     imports: [
       UsuarioModule,
       PassportModule,
       TypeOrmModule.forFeature([
-        Usuario, 
+        Usuario,
         RolUsuario
       ]),
       JwtModule.registerAsync({

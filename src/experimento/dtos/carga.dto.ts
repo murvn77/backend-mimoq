@@ -14,6 +14,10 @@ export class CreateCargaDto {
     @IsArray()
     @ApiProperty()
     readonly duracion_picos: string[];
+    @IsNotEmpty()
+    @IsArray()
+    @ApiProperty()
+    readonly duracion_total: string[];
 }
 
 export class UpdateCargaDto extends PartialType(CreateCargaDto) { }

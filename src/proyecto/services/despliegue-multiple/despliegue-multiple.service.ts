@@ -2,17 +2,13 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
 /** Dtos */
-import { CreateDeploymentDto, UpdateDeploymentDto } from 'src/proyecto/dtos/despliegue.dto';
-
+import { CreateDeploymentDto, UpdateDeploymentDto } from '../../dtos/despliegue.dto';
 /** Entities */
-import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
-import { Proyecto } from 'src/proyecto/entities/proyecto.entity';
-
+import { Proyecto } from '../../entities/proyecto.entity';
+import { Despliegue } from '../../entities/despliegue.entity';
 /** Services */
 import { ProyectoService } from '../proyecto/proyecto.service';
-
 /** Utils */
 import * as fs from 'fs-extra';
 import * as yaml from 'js-yaml';
@@ -178,10 +174,6 @@ export class DespliegueMultipleService {
   private async pullImage(proyecto: Proyecto, imagesToBuild: any[], data: CreateDeploymentDto) {
     let desplieguesRealizados: Despliegue[] = [];
     const localRegistry = 'localhost:5000';
-
-    const envMinikube = `eval $(minikube docker-env)`;
-    await this.despliegueUtilsService.executeCommand(envMinikube);
-    console.log(`Minikube trabaja con configuración local`);
 
     for (const container of imagesToBuild) {
       const imageName = container.image;

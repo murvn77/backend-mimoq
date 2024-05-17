@@ -1,9 +1,8 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateAtributoDto } from 'src/metrica/dtos/atributo.dto';
-import { Atributo } from 'src/metrica/entities/atributo.entity';
 import { Repository } from 'typeorm';
-import * as request from 'supertest';
+import { Atributo } from '../../entities/atributo.entity';
+import { CreateAtributoDto } from '../../dtos/atributo.dto';
 
 @Injectable()
 export class AtributoService {

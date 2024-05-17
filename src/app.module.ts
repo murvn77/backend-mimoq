@@ -33,9 +33,6 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
     ProyectoModule,
     ExperimentoModule,
     AuthModule,
-    DevtoolsModule.register({
-      http: process.env.NODE_ENV !== 'production'
-    }),
   ],
   controllers: [AppController],
   providers: [AppService],

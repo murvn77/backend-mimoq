@@ -6,10 +6,9 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
-import { ROLES_KEY } from 'src/auth/decorators/roles.decorator';
-import { Role } from 'src/auth/models/roles.model';
-import { PayloadToken } from 'src/auth/models/token.model';
-
+import { Role } from '../../models/roles.model';
+import { ROLES_KEY } from '../../decorators/roles.decorator';
+import { PayloadToken } from '../../models/token.model';
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}

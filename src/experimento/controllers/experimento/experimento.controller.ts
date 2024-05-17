@@ -1,8 +1,7 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Post, Put, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateExperimentoDto } from 'src/experimento/dtos/experimento.dto';
-import { ExperimentoService } from 'src/experimento/services/experimento/experimento.service';
-import { UpdateExperimentoDto } from '../../dtos/experimento.dto';
+import { CreateExperimentoDto, UpdateExperimentoDto } from '../../dtos/experimento.dto';
+import { ExperimentoService } from '../../services/experimento/experimento.service';
 
 import { Response } from 'express';
 import * as fs from 'fs';
@@ -23,7 +22,7 @@ export class ExperimentoController {
     if (fs.existsSync(archivoPath)) {
       // Establecer las cabeceras para la descarga
       res.setHeader('Content-Disposition', `attachment; filename=${nombre_archivo}`);
-      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Type', 'text/json');
 
       // Leer el archivo y enviarlo como respuesta
       const archivoStream = fs.createReadStream(archivoPath);
@@ -42,6 +41,11 @@ export class ExperimentoController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.experimentoService.findOne(id);
+  }
+
+  @Get('archivos/:id')
+  findFiles(@Param('id', ParseIntPipe) id: number, @Res() res: Response) {
+    return this.experimentoService.findFiles(id, res);
   }
 
   @Post()

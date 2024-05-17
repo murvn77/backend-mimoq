@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateAtributoDto } from 'src/metrica/dtos/atributo.dto';
-import { AtributoService } from 'src/metrica/services/atributo/atributo.service';
+import { AtributoService } from '../../services/atributo/atributo.service';
+import { CreateAtributoDto } from '../../dtos/atributo.dto';
 
 @ApiTags('Atributo')
 @Controller('atributo')

@@ -3,16 +3,14 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 /** Dtos */
-import { CreateDeploymentDto } from 'src/proyecto/dtos/despliegue.dto';
+import { CreateDeploymentDto } from '../../dtos/despliegue.dto';
 /** Entities */
-import { Despliegue } from 'src/proyecto/entities/despliegue.entity';
-import { Proyecto } from 'src/proyecto/entities/proyecto.entity';
+import { Proyecto } from '../../entities/proyecto.entity';
+import { Despliegue } from '../../entities/despliegue.entity';
 /** Services */
 import { ProyectoService } from '../proyecto/proyecto.service';
 /** Utils */
 import * as fs from 'fs-extra';
-import * as yaml from 'js-yaml';
-import { exec } from 'child_process';
 import { DespliegueService } from '../despliegue/despliegue.service';
 /** Repositorio que tiene sólo un microservicio */
 @Injectable()
@@ -30,12 +28,12 @@ export class DespliegueIndividualService {
         private despliegueRepo: Repository<Despliegue>,
         private despliegueUtilsService: DespliegueService,
         private proyectoService: ProyectoService,
-        
+
     ) { }
     async validateProjectToDeploy(data: CreateDeploymentDto) {
         const proyecto = await this.proyectoService.findOne(data.fk_proyecto);
         if (!proyecto) throw new InternalServerErrorException(`No se encontró el proyecto con id ${data.fk_proyecto}`);
-        
+
         const existingDeployment = await this.despliegueRepo.findOne({
             where: {
                 nombre_helm: data.nombre_helm,

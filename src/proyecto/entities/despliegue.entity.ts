@@ -1,6 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Proyecto } from './proyecto.entity';
-import { Experimento } from 'src/experimento/entities/experimento.entity';
 
 @Entity()
 export class Despliegue {

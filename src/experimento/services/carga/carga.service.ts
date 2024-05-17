@@ -1,8 +1,8 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateCargaDto, UpdateCargaDto } from 'src/experimento/dtos/carga.dto';
-import { Carga } from 'src/experimento/entities/carga.entity';
 import { Repository } from 'typeorm';
+import { Carga } from '../../entities/carga.entity';
+import { CreateCargaDto, UpdateCargaDto } from '../../dtos/carga.dto';
 
 @Injectable()
 export class CargaService {

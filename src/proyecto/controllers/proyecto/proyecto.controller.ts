@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateProjectDto, UpdateProjectDto } from 'src/proyecto/dtos/proyecto.dto';
-import { ProyectoService } from 'src/proyecto/services/proyecto/proyecto.service';
+import { ProyectoService } from '../../services/proyecto/proyecto.service';
+import { CreateProjectDto, UpdateProjectDto } from '../../dtos/proyecto.dto';
 
 @ApiTags('Proyecto')
 @Controller('proyecto')
