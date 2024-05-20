@@ -14,12 +14,19 @@ import * as fs from 'fs-extra';
 import * as net from 'net';
 import { exec } from 'child_process';
 import simpleGit from 'simple-git';
+import { Usuario } from '../../../usuario/entities/usuario.entity';
+import { UsuarioService } from '../../../usuario/services/usuario/usuario.service';
+import { ProyectoService } from '../proyecto/proyecto.service';
+import { Proyecto } from '../../entities/proyecto.entity';
 
 @Injectable()
 export class DespliegueService {
   constructor(
     @InjectRepository(Despliegue)
     private despliegueRepo: Repository<Despliegue>,
+    @InjectRepository(Proyecto)
+    private proyectoRepo: Repository<Proyecto>,
+    private usuarioService: UsuarioService,
   ) { }
 
   async findAll() {
@@ -45,6 +52,33 @@ export class DespliegueService {
         nombre_helm: name,
       }
     });
+  }
+
+
+  async findAllByUser(id: number): Promise<Despliegue[]> {
+    const despliegues: Despliegue[] = [];
+    const user = await this.usuarioService.findOne(id);
+
+    if (!(user instanceof Usuario)) {
+      throw new NotFoundException(`El usuario no está registrado en la BD`);
+    }
+
+    const projects = await this.proyectoRepo.find({
+      where: { usuario: user }
+    });
+
+    for (const project of projects) {
+      const despliegues_proyecto = await this.despliegueRepo.find({
+        where: { proyecto: project }
+      });
+      despliegues.push(...despliegues_proyecto);
+    }
+
+    if (despliegues.length === 0) {
+      throw new NotFoundException(`No se encontraron despliegues para los proyectos del usuario`);
+    }
+
+    return despliegues;
   }
 
 
@@ -84,43 +118,43 @@ export class DespliegueService {
   /** Construcción de archivo "Values" para Helm */
   async deployApp(nombreApp: string, yamlValues: any): Promise<boolean> {
     try {
-        console.log('DATA VALUES YAML: ', yamlValues);
+      console.log('DATA VALUES YAML: ', yamlValues);
 
-        // Escribir el archivo YAML
-        const dirValues = `./utils/values.yaml`;
-        fs.writeFileSync(dirValues, yamlValues, 'utf8');
+      // Escribir el archivo YAML
+      const dirValues = `./utils/values.yaml`;
+      fs.writeFileSync(dirValues, yamlValues, 'utf8');
 
-        console.log(`Nombre de la aplicación para despliegue: ${nombreApp}`);
+      console.log(`Nombre de la aplicación para despliegue: ${nombreApp}`);
 
-        const helmCommand = `helm install ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
+      const helmCommand = `helm install ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
 
-        return await new Promise<boolean>((resolve, reject) => {
-            exec(helmCommand, async (error, stdout) => {
-                if (error) {
-                    console.error(`Error al ejecutar creación de Helm: ${error.message}`);
-                    const helmUpdateCommand = `helm upgrade ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
-                    exec(helmUpdateCommand, (updateError, updateStdout) => {
-                        if (updateError) {
-                            console.error(`Error al ejecutar actualización de Helm: ${updateError.message}`);
-                            resolve(false);
-                        } else {
-                            console.log(`Despliegue exitoso: ${updateStdout}`);
-                            resolve(true);
-                        }
-                    });
-
-                } else {
-                    console.log(`Despliegue exitoso: ${stdout}`);
-                    resolve(true);
-                }
+      return await new Promise<boolean>((resolve, reject) => {
+        exec(helmCommand, async (error, stdout) => {
+          if (error) {
+            console.error(`Error al ejecutar creación de Helm: ${error.message}`);
+            const helmUpdateCommand = `helm upgrade ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
+            exec(helmUpdateCommand, (updateError, updateStdout) => {
+              if (updateError) {
+                console.error(`Error al ejecutar actualización de Helm: ${updateError.message}`);
+                resolve(false);
+              } else {
+                console.log(`Despliegue exitoso: ${updateStdout}`);
+                resolve(true);
+              }
             });
+
+          } else {
+            console.log(`Despliegue exitoso: ${stdout}`);
+            resolve(true);
+          }
         });
+      });
 
     } catch (error) {
-        console.error(`Error en construirArchivoValues: ${error.message}`);
-        return false;
+      console.error(`Error en construirArchivoValues: ${error.message}`);
+      return false;
     }
-}
+  }
 
   /** Clonar el repositorio */
   async cloneRepository(url: string, tempDir: string) {

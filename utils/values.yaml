@@ -17,14 +17,14 @@ image:
   - name: springcommunity/spring-petclinic-admin-server
     portExpose: 9090
 nodePort:
-  - 30117
-  - 30642
-  - 30413
-  - 31641
-  - 30776
-  - 31748
-  - 31691
-  - 32304
+  - 30722
+  - 30055
+  - 30170
+  - 31551
+  - 32314
+  - 32480
+  - 30187
+  - 30317
 appName:
   - config-server
   - discovery-server

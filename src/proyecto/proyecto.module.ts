@@ -28,6 +28,6 @@ import { RolUsuarioService } from '../usuario/services/rol-usuario/rol-usuario.s
     UsuarioService,
     RolUsuarioService
   ],
-  controllers: [ProyectoController, DespliegueController],
+  controllers: [ProyectoController, DespliegueController]
 })
 export class ProyectoModule { }

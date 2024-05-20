@@ -225,7 +225,7 @@ cantReplicas:`;
       for (let i = 0; i < imagesToBuild.length; i++) {
         const newDeployment = this.despliegueRepo.create(data);
         newDeployment.nombre = this.nombresDespliegues[i];
-        newDeployment.proyecto = proyecto;
+        // newDeployment.proyecto = proyecto;
         newDeployment.puerto = this.puertosDespliegues[i];
         newDeployment.cant_replicas = data.replicas[i];
         try {
@@ -238,7 +238,7 @@ cantReplicas:`;
       proyecto.imagenes_deploy = this.imagenesDespliegues;
       proyecto.puertos_imagenes = this.puertosExposeApps;
       proyecto.puertos_deploy = this.puertosDespliegues;
-      //proyecto.despliegues = desplieguesRealizados;
+      proyecto.despliegues = desplieguesRealizados;
       await this.proyectoRepo.save(proyecto);
 
       this.imagenesDespliegues = [];

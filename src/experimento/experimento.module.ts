@@ -16,6 +16,12 @@ import { DespliegueService } from '../proyecto/services/despliegue/despliegue.se
 import { MetricaService } from '../metrica/services/metrica/metrica.service';
 import { AtributoService } from '../metrica/services/atributo/atributo.service';
 import { SubatributoService } from '../metrica/services/subatributo/subatributo.service';
+import { Proyecto } from '../proyecto/entities/proyecto.entity';
+import { RolUsuario } from '../usuario/entities/rol-usuario.entity';
+import { Usuario } from '../usuario/entities/usuario.entity';
+import { ProyectoService } from '../proyecto/services/proyecto/proyecto.service';
+import { UsuarioService } from '../usuario/services/usuario/usuario.service';
+import { RolUsuarioService } from '../usuario/services/rol-usuario/rol-usuario.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([
@@ -24,10 +30,13 @@ import { SubatributoService } from '../metrica/services/subatributo/subatributo.
       Despliegue,
       Metrica,
       Atributo,
-      Subatributo
+      Subatributo,
+      Proyecto,
+      Usuario,
+      RolUsuario,
     ]),
   ],
-  providers: [ExperimentoService, CargaService, DespliegueService, MetricaService, AtributoService, SubatributoService, TableroService],
+  providers: [ExperimentoService, CargaService, DespliegueService, MetricaService, AtributoService, SubatributoService, TableroService, ProyectoService, UsuarioService, RolUsuarioService],
   controllers: [ExperimentoController, CargaController, TableroController],
 })
 export class ExperimentoModule {}

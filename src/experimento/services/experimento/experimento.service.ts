@@ -246,7 +246,8 @@ console.log('LOAD: ', load)
   }
 
   private writePanelJSON(panels: any[], duracion: string, deployment: Despliegue, index: number, directoryPath: string) {
-    console.log('DEPLOY: ', deployment.proyecto.nombre);
+    console.log(deployment);
+    // console.log('DEPLOY: ', deployment.proyecto.nombre);
     const panelesSeleccionados = panels;
 
     // Cambiar el nombre del testing de cada panel
