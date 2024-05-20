@@ -20,15 +20,19 @@ export class DespliegueService {
   constructor(
     @InjectRepository(Despliegue)
     private despliegueRepo: Repository<Despliegue>,
-    // private proyectoService: ProyectoService,
   ) { }
 
   async findAll() {
-    return await this.despliegueRepo.find({});
+    return await this.despliegueRepo.find({
+      relations: ['proyecto']
+    });
   }
 
   async findOne(id: number) {
-    const despliegue = await this.despliegueRepo.findOneBy({ id_despliegue: id });
+    const despliegue = await this.despliegueRepo.findOne({
+      where: { id_despliegue: id },
+      relations: ['proyecto']
+    });
     if (!despliegue) {
       throw new NotFoundException(`Despliegue con id #${id} no se encuentra en la Base de Datos`);
     }
@@ -42,6 +46,7 @@ export class DespliegueService {
       }
     });
   }
+
 
   private async isPortInUse(port: number): Promise<boolean> {
     return new Promise((resolve, reject) => {

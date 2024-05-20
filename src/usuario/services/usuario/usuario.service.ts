@@ -15,17 +15,6 @@ export class UsuarioService {
     private rolUsuarioService: RolUsuarioService,
   ) { }
 
-  async build() {
-    try {
-
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException(
-        `Problemas encontrando los usuarios: ${error}`,
-      );
-    }
-  }
-
   async findAll() {
     try {
       return await this.usuarioRepo.find({

@@ -46,8 +46,7 @@ export class MetricaService {
   async findOneByName(nombre: string) {
     try {
       const metrica = await this.metricaRepo.findOne({
-        where: { nombre: nombre },
-        relations: ['atributo'],
+        where: { nombre: nombre }
       });
       return metrica;
     } catch (error) {

@@ -1012,6 +1012,8 @@ grafana:
   grafana.ini:
     security:
       allow_embedding: true
+    auth.anonymous:
+      enabled: true
 
 
   # # To make Grafana persistent (Using Statefulset)
@@ -3760,7 +3762,7 @@ prometheus:
       - job_name: "node-exporter"
         static_configs:
           - targets:
-              - "10.152.183.235:9100"
+              - "10.152.183.132:9100"
         # relabel_configs:
         #   - source_labels: [__address__]
         #     target_label: instance

@@ -24,12 +24,6 @@ export class DespliegueController {
         return this.despliegueService.findOne(id);
     }
 
-
-    // @Get('proyecto/:id')
-    // findAllByProject(@Param('id', ParseIntPipe) id: number) {
-    //     return this.despliegueService.findAllByProject(id);
-    // }
-
     @Get('nombreHelm/:nombre')
     findOneByHelmName(@Param('nombre') nombre: string) {
         return this.despliegueService.findOneByHelmName(nombre);
@@ -38,13 +32,17 @@ export class DespliegueController {
     @Post('individual')
     createIndividualDeployment(@Body() payload: CreateDeploymentDto) {
         console.log('Body en controller', payload);
-        return this.despliegueIndividualService.validateProjectToDeploy(payload);
+        const rtaFromContollwe = this.despliegueIndividualService.validateProjectToDeploy(payload);
+        console.log('from controller: ', rtaFromContollwe);
+        return rtaFromContollwe;
     }
 
     @Post('multiple')
     createMultipleDeployment(@Body() payload: CreateDeploymentDto) {
         console.log('Body en controller', payload);
-        return this.despliegueMultipleService.validateProjectToDeploy(payload);
+        const rtaFromContollwe = this.despliegueMultipleService.validateProjectToDeploy(payload);
+        console.log('from controller: ', rtaFromContollwe);
+        return rtaFromContollwe;
     }
 
     @Put(':id')

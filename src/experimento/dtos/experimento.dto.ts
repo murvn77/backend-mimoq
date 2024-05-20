@@ -4,6 +4,7 @@ import {
   IsArray,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsPositive,
   IsString,
 } from 'class-validator';
@@ -25,6 +26,10 @@ export class CreateExperimentoDto {
   @IsArray()
   @ApiProperty()
   readonly endpoints: string[];
+  @IsOptional()
+  @IsArray()
+  @ApiProperty()
+  readonly iframes: string[];
   @IsNotEmpty({ message: 'Las FKs de los despliegues son obligatorios' })
   @IsNumber({}, {each: true})
   @ApiProperty()

@@ -107,6 +107,51 @@ export class ExperimentoService {
     }
   }
 
+  async buildDashboard(data: CreateExperimentoDto) {
+    const metrics: Metrica[] = [];
+    const deployments: Despliegue[] = [];
+    const iframes: string[] = [];
+    const basePath = './utils/resultados-experimentos';
+    const formattedName = data.nombre.toLowerCase().replace(/\s+/g, '-');
+    const directoryPath = path.join(basePath, formattedName);
+
+    if (!fs.existsSync(directoryPath)) {
+      fs.mkdirSync(directoryPath);
+      console.log(`Directorio '${formattedName}' creado en '${basePath}'.`);
+    } else {
+      console.log(`El directorio '${formattedName}' ya existe en '${basePath}'.`);
+    }
+
+    for (const fk_id_metrica of data.fk_ids_metricas) {
+      const metric = await this.metricaService.findOne(fk_id_metrica);
+      if (!metric) throw new NotFoundException(`Metrica con id #${fk_id_metrica} no se encuentra en la Base de Datos`);
+      metrics.push(metric);
+    }
+
+    const load = await this.cargaService.findOne(data.fk_id_carga);
+    for (const fk_id_despliegue of data.fk_ids_despliegues) {
+      const deployment = await this.despliegueUtilsService.findOne(fk_id_despliegue);
+      if (!deployment) throw new NotFoundException(`Despliegue con id #${fk_id_despliegue} no se encuentra en la Base de Datos`);
+      deployments.push(deployment);
+    }
+
+    const metricsHTTPToPanels = metrics.map(metric => metric.nombre_prometheus);
+    console.log('METRICS HTTP TO PANELS: ', metricsHTTPToPanels);
+
+
+console.log('LOAD: ', load)
+
+    for (let i = 0; i < deployments.length; i++) {
+      const panelesSeleccionados = this.filterPanels(metricsHTTPToPanels);
+      this.writePanelJSON(panelesSeleccionados, load.duracion_total[i], deployments[i], i, directoryPath);
+      console.log('PASA DEL WRITE... ');
+      const iframe = await this.tableroService.loadDashboard(data.nombre, deployments[i].nombre);
+      iframes.push(iframe);
+    }
+
+    return iframes;
+  }
+
 
   async createExperiment(data: CreateExperimentoDto) {
     try {
@@ -145,13 +190,14 @@ export class ExperimentoService {
       console.log('METRICS HTTP TO PANELS: ', metricsHTTPToPanels)
 
       for (let i = 0; i < deployments.length; i++) {
-        const nombres_archivos = await this.generateLoadAndManipulatePanels(metricsHTTPToPanels, deployments, load, data, directoryPath, i, newExperiment);
+        const nombres_archivos = await this.generateLoad(metricsHTTPToPanels, deployments, load, data, directoryPath, i, newExperiment);
         if (!newExperiment.nombres_archivos) {
           newExperiment.nombres_archivos = []; // Inicializa la propiedad si aún no está definida
         }
         newExperiment.nombres_archivos = newExperiment.nombres_archivos.concat(nombres_archivos);
       }
 
+      newExperiment.iframes = data.iframes;
       newExperiment.despliegues = deployments;
       newExperiment.metricas = metrics;;
       newExperiment.carga = load;
@@ -164,36 +210,27 @@ export class ExperimentoService {
     }
   }
 
-  private async generateLoadAndManipulatePanels(metricsToPanels: string[], deployments: Despliegue[], load: any, data: CreateExperimentoDto, directoryPath: string, i: number, newExperiment: Experimento) {
-    const panelesSeleccionados = this.filterPanels(metricsToPanels);
-    this.writePanelJSON(panelesSeleccionados, load.duracion_total[i], deployments[i], i, directoryPath);
-
+  private async generateLoad(metricsToPanels: string[], deployments: Despliegue[], load: any, data: CreateExperimentoDto, directoryPath: string, i: number, newExperiment: Experimento) {
     const ipCluster = '127.0.0.1';
     const url = `http://${ipCluster}:${deployments[i].puerto}`;
     const dirLoad = './utils/generate-load-k6/load_test.js';
     console.log(`Generando carga en el microservicio que está en: ${url}`);
-    const files: string[] = [];
     const nombres_archivos: string[] = [];
-
-    await this.tableroService.loadDashboard(data.nombre, deployments[i].nombre);
-    console.log('entra 0...');
 
     for (let j = 0; j < data.cant_replicas; j++) {
       console.log('entra...');
       const out = `${directoryPath}/results-${deployments[i].nombre}-${i}-replica-${j}.json`;
       console.log('entra...2');
 
-      // const loadCommand = `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run --out json=${out} -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," -e SUMMARY="utils/resultados-experimentos/${data.nombre}/resultado-${deployments[i].nombre}.html" ${dirLoad}`;
+      const loadCommand = `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run --out json=${out} -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," -e SUMMARY="utils/resultados-experimentos/${data.nombre}/resultado-${deployments[i].nombre}.html"  --tag testid=${deployments[i].nombre} ${dirLoad}`;
 
-      const loadCommand = `k6 run --out json=${out} -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," -e SUMMARY="./utils/resultados-experimentos/${data.nombre}/resultado-${deployments[i].nombre}-replica-${j}.html" --tag testid=elpepe ${dirLoad}`;
       console.log('entra...3');
 
       await this.executeCommand(loadCommand);
       console.log('entra...4');
 
-      // const contenidoJSON = fs.readFileSync(out, 'utf8');
-      // files.push(contenidoJSON);
       console.log(`Generó carga. Microserivicio ${i + 1}, réplica ${j + 1}.`);
+
       nombres_archivos.push(`results-${deployments[i].nombre}-${i}-replica-${j}.json`);
       nombres_archivos.push(`resultado-${deployments[i].nombre}-replica-${j}.html`);
     }
@@ -209,29 +246,48 @@ export class ExperimentoService {
   }
 
   private writePanelJSON(panels: any[], duracion: string, deployment: Despliegue, index: number, directoryPath: string) {
+    console.log('DEPLOY: ', deployment.proyecto.nombre);
     const panelesSeleccionados = panels;
+
+    // Cambiar el nombre del testing de cada panel
+    for (const panel of panelesSeleccionados) {
+      for (const target of panel.targets) {
+        if (target.expr?.includes("elpepe")) {
+          target.expr = target.expr.replace(/elpepe/g, deployment.nombre);
+        }
+      }
+    }
+
     fs.writeFile(`./utils/build-charts-dash/paneles-experiment.json`, JSON.stringify(panelesSeleccionados, null, 2), (err) => {
       if (err) {
         console.error('Error al guardar el service en el nuevo archivo JSON:', err);
         return;
       }
       console.log(`El nuevo archivo JSON con el service para el despliegue ${index} se ha creado correctamente.`);
-      this.addTOJSONDash(index, panelesSeleccionados, duracion, deployment.nombre, directoryPath);
+      this.addTOJSONDash(index, panelesSeleccionados, duracion, deployment, directoryPath);
     });
   }
 
-  private async addTOJSONDash(index: number, panelesSeleccionados: any, duracion: string, nombre: string, directoryPath: string) {
+  private async addTOJSONDash(index: number, panelesSeleccionados: any, duracion: string, deployment: Despliegue, directoryPath: string) {
     try {
-
+      const nombre = deployment.nombre;
       console.log('DURATION: ', duracion)
       const dataDashboard = await fs.promises.readFile('./utils/build-charts-dash/tmpl-tablero.json', 'utf-8');
       const dashboard = JSON.parse(dataDashboard);
       dashboard.dashboard.title = `dash-${nombre}`;
       dashboard.dashboard.uid = `dash-${nombre}`;
-      dashboard.dashboard.time.from = `now-${duracion}`;
+      // dashboard.dashboard.time.from = `now-${duracion}`;
+      // dashboard.dashboard.time.from = `now-5m`;
       panelesSeleccionados.forEach((panel: any) => {
         dashboard.dashboard.panels.push(panel);
       });
+
+      dashboard.dashboard.templating.list.forEach((item) => {
+        if (item.current?.text === "elpepe") {
+            item.current.text = deployment.nombre;
+            item.current.value = `$__${deployment.nombre}`;
+        }
+    });
 
       await fs.promises.writeFile(`${directoryPath}/dash-${nombre}.json`, JSON.stringify(dashboard, null, 2));
       console.log(`El nuevo archivo JSON del dashboard ${index} se creó correctamente`);

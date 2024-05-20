@@ -6,7 +6,7 @@ import { spawn } from 'child_process';
 export class TableroService {
   async createAPIKey() {
     try {
-      const dashboardAPI = `curl -X POST -H "Content-Type: application/json" -d '{"name": "mi-api-key-2", "role": "Admin"}' http://admin:prom-operator@localhost:8080/api/auth/keys | jq -r '.key'`;
+      const dashboardAPI = `curl -X POST -H "Content-Type: application/json" -d '{"name": "mi-api-key", "role": "Admin"}' http://admin:prom-operator@localhost:8080/api/auth/keys | jq -r '.key'`;
       await this.executeCommand(dashboardAPI);
     } catch (error) {
       console.error('Error al crear la clave de la API:', error);
@@ -20,44 +20,46 @@ export class TableroService {
       await this.executeCommand(loadDashboard);
 
       console.log('Tablero creado...');
-      await this.loadPanels(nombre_despliegue);
+      return await this.loadPanels(nombre_despliegue);
     } catch (error) {
       console.error('Error al cargar el tablero:', error);
     }
   }
 
-  async loadPanels(nombre_despliegue: string) {
-    try {
-      // Obtener el UID del dashboard
-      const dashboardSearchResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/search?query=dash-${nombre_despliegue}`, {
-        headers: {
-          Authorization: `Bearer ${process.env.GRAFANA_PASSWORD}`
-        }
-      });
-      const dashboardUid = dashboardSearchResponse.data[0].uid;
+    async loadPanels(nombre_despliegue: string) {
+      try {
+        // Obtener el UID del dashboard
+        const dashboardSearchResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/search?query=dash-${nombre_despliegue}`, {
+          headers: {
+            Authorization: `Bearer ${process.env.GRAFANA_PASSWORD}`
+          }
+        });
+        const dashboardUid = dashboardSearchResponse.data[0].uid;
 
-      // Verificar si se encontró el dashboard
-      if (!dashboardUid) {
-        throw new Error('No se encontró el UID del dashboard');
+        // Verificar si se encontró el dashboard
+        if (!dashboardUid) {
+          throw new Error('No se encontró el UID del dashboard');
+        }
+
+        // Obtener información de los paneles del dashboard
+        const dashboardInfoResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/dashboards/uid/${dashboardUid}`, {
+          headers: {
+            Authorization: `Bearer ${process.env.GRAFANA_PASSWORD}`
+          }
+        });
+        const panelsInfo = dashboardInfoResponse.data.dashboard.panels.map((panel: any) => panel.id);
+
+        // Construir los iframes para cada panel
+        const iframes = panelsInfo.map((panelId: string) =>
+          `<iframe src="http://localhost:8080/d-solo/${dashboardUid}/panelexportatepls?orgId=1&refresh=5s&panelId=${panelId}" width="450" height="200" frameborder="0"></iframe>`
+        );
+        console.log('Paneles cargados:', iframes);
+
+        return iframes;
+      } catch (error) {
+        console.error('Error al cargar los paneles:', error);
       }
-
-      // Obtener información de los paneles del dashboard
-      const dashboardInfoResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/dashboards/uid/${dashboardUid}`, {
-        headers: {
-          Authorization: `Bearer ${process.env.GRAFANA_PASSWORD}`
-        }
-      });
-      const panelsInfo = dashboardInfoResponse.data.dashboard.panels.map((panel: any) => panel.id);
-
-      // Construir los iframes para cada panel
-      const iframes = panelsInfo.map((panelId: string) =>
-        `<iframe src="http://localhost:8080/d-solo/${dashboardUid}/panelexportatepls?orgId=1&refresh=5s&panelId=${panelId}" width="450" height="200" frameborder="0"></iframe>`
-      );
-      console.log('Paneles cargados:', iframes);
-    } catch (error) {
-      console.error('Error al cargar los paneles:', error);
     }
-  }
 
   private async executeCommand(command: string): Promise<{ stdout: string, stderr: string }> {
     return new Promise((resolve, reject) => {

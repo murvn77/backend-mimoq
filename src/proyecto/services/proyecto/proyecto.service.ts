@@ -44,13 +44,11 @@ export class ProyectoService {
   async findAllByUser(id: number) {
     try {
       const usuario = await this.usuarioService.findOne(id);
-
-      if ( !(usuario instanceof Usuario) ) {
+      if (!(usuario instanceof Usuario)) {
         throw new NotFoundException(
           `Usuario con id #${id} no se encuentra en la Base de Datos para mostrar los proyectos`,
         );
       }
-
       return await this.proyectoRepo.find({
         where: { usuario: usuario }
       });

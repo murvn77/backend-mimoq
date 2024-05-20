@@ -48,8 +48,14 @@ export class ExperimentoController {
     return this.experimentoService.findFiles(id, res);
   }
 
+  @Post('dashboard')
+  buildDashboard(@Body() payload: CreateExperimentoDto) {
+    console.log('Body en controller', payload);
+    return this.experimentoService.buildDashboard(payload);
+  }
+
   @Post()
-  createUsuario(@Body() payload: CreateExperimentoDto) {
+  createExperiment(@Body() payload: CreateExperimentoDto) {
     console.log('Body en controller', payload);
     return this.experimentoService.createExperiment(payload);
   }

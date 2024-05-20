@@ -46,20 +46,9 @@ export class DespliegueMultipleService {
   /** Revisa si los microservicios están en un mismo repo o no */
   async validateProjectToDeploy(data: CreateDeploymentDto) {
     const proyecto = await this.proyectoService.findOne(data.fk_proyecto);
-
     if (!proyecto) {
       throw new InternalServerErrorException(`No se encontró el proyecto con id ${data.fk_proyecto}`);
     }
-
-    // const existingDeployment = await this.despliegueRepo.findOne({
-    //   where: {
-    //     nombre_helm: data.nombre_helm,
-    //   }
-    // });
-
-    // if (existingDeployment) {
-    //   throw new InternalServerErrorException(`El despliegue con nombre ${data.nombre_helm} ya está registrado en la base de datos`);
-    // }
 
     const tempDir = `./utils/temp-repo-${Date.now()}`;
     await this.despliegueUtilsService.cloneRepository(proyecto.url_repositorio, tempDir);
@@ -118,12 +107,10 @@ export class DespliegueMultipleService {
 
   private dockerImageParameters(composeData: DockerComposeConfig): any[] {
     const kubernetesSpecs: any[] = [];
-    let guardada = false;
     for (const serviceName in composeData.services) {
       if (composeData.services.hasOwnProperty(serviceName)) {
         const serviceConfig = composeData.services[serviceName];
         const [port1,] = serviceConfig.ports[0].split(':').map(port => parseInt(port, 10));
-
         if (serviceConfig.image != undefined) {
           const kubernetesSpec = {
             name: serviceName,
@@ -132,20 +119,8 @@ export class DespliegueMultipleService {
             container_name: serviceConfig.container_name
           };
           kubernetesSpecs.push(kubernetesSpec);
-          guardada = true;
         }
-
-        // if (serviceConfig.image != undefined && !guardada) {
-        //     const kubernetesSpec = {
-        //         build: serviceConfig.build,
-        //         image: serviceConfig.image,
-        //         port_expose: port1,
-        //         container_name: serviceConfig.container_name
-        //     };
-        //     kubernetesSpecs.push(kubernetesSpec);
-        // }
       }
-      guardada = false;
     }
     return kubernetesSpecs;
   }
@@ -185,10 +160,6 @@ export class DespliegueMultipleService {
       await this.despliegueUtilsService.executeCommand(pullCommand);
       console.log(`Haciendo pull de la imagen`);
 
-      // const loadImageMinikube = `minikube image load ${imageName}`;
-      // await this.despliegueUtilsService.executeCommand(loadImageMinikube);
-      // console.log(`Imagen cargada en minikube correctamente`);
-
       const tagCommand = `docker tag ${imageName} ${imageLocalRegistry}`;
       await this.despliegueUtilsService.executeCommand(tagCommand);
       console.log(`Imagen Docker etiquetada correctamente`);
@@ -213,9 +184,6 @@ export class DespliegueMultipleService {
       this.imagenesRepository.push(imageLocalRegistry);
     }
 
-    this.puertosDespliegues.forEach(pt => {
-      console.log('f:', pt);
-    });
     let yamlContent = `namespace: ${data.namespace}
 image:`;
 
@@ -249,8 +217,6 @@ cantReplicas:`;
   - ${data.replicas[i]}`;
     }
 
-    console.log('YML CONTENT: ', yamlContent);
-
     await this.despliegueUtilsService.deployApp(data.nombre_helm, yamlContent);
 
     const code = await this.executeInBackground(this.nombresDespliegues);
@@ -269,13 +235,10 @@ cantReplicas:`;
         }
         desplieguesRealizados.push(newDeployment);
       }
-      this.puertosDespliegues.forEach(pt => {
-        console.log('S:', pt);
-      });
-
       proyecto.imagenes_deploy = this.imagenesDespliegues;
       proyecto.puertos_imagenes = this.puertosExposeApps;
       proyecto.puertos_deploy = this.puertosDespliegues;
+      //proyecto.despliegues = desplieguesRealizados;
       await this.proyectoRepo.save(proyecto);
 
       this.imagenesDespliegues = [];
@@ -288,7 +251,6 @@ cantReplicas:`;
       return desplieguesRealizados;
     } else {
       throw new InternalServerErrorException(`Error al subproceso`);
-
     }
   }
 
