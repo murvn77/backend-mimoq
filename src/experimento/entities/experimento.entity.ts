@@ -26,6 +26,9 @@ export class Experimento {
     @Column('varchar', { array: true, nullable: true })
     iframes: string[];
 
+    @Column('varchar', { array: true, nullable: true })
+    tiempo_escalado: string[];
+
     @ManyToOne(() => Carga, (carga) => carga.experimentos)
     @JoinColumn({ name: 'fk_id_carga' })
     carga: Carga;

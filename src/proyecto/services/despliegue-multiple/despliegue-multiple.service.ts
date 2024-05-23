@@ -217,6 +217,18 @@ cantReplicas:`;
   - ${data.replicas[i]}`;
     }
 
+    yamlContent += `
+autoscaling: ${data.autoescalado}`;
+
+    yamlContent += `
+minReplicas: ${data.min_replicas}`;
+
+    yamlContent += `
+maxReplicas: ${data.max_replicas}`;
+
+    yamlContent += `
+targetCPUUtilizationPercentage: ${data.utilization_cpu}`;
+
     await this.despliegueUtilsService.deployApp(data.nombre_helm, yamlContent);
 
     const code = await this.executeInBackground(this.nombresDespliegues);
@@ -254,47 +266,19 @@ cantReplicas:`;
     }
   }
 
-
+  // Agrego el +6 porque son los pods de grafana y prometheus
   executeInBackground = async (nombresDespliegues: string[]) => {
     return new Promise((resolve, reject) => {
       const timeoutSeconds = 300; // 5 minutos (en segundos)
       const startTime = Date.now();
-      let numberOfRunningPods = 0;
-
-      // const subprocess = spawn('bash', ['-c', `
-      //   while [[ ${this.nombresDespliegues.length} -gt ${numberOfRunningPods} ]]; do
-      //     numberOfRunningPods=$(kubectl get pods -o=json | jq -r '.items[] | select(any(.status.containerStatuses[]; .state.running)) | .metadata.labels.app' | wc -l)
-      //     echo "Número de pods en estado 'Running': $numberOfRunningPods de ${this.nombresDespliegues.length}"
-
-      //     if (( $(date +%s) - ${startTime} > ${timeoutSeconds} )); then
-      //       echo "Tiempo de espera agotado. Saliendo del bucle."
-      //       exit 1 # Establecer un código de salida para indicar error
-      //     fi
-
-      //     sleep 1
-      //   done
-      // `], { stdio: 'inherit' });
-
-
-      // subprocess.on('error', (err) => {
-      //   console.error('Error al ejecutar el proceso secundario:', err);
-      //   reject(err); // Rechazar la promesa si hay un error
-      // });
-
-      // subprocess.on('exit', (code, signal) => {
-      //   console.log(`Proceso secundario finalizado con código ${code} y señal ${signal}`);
-      //   // Resolver la promesa con el código de salida
-      //   resolve(code);
-      // });
-
       const subprocess = spawn('bash');
 
       subprocess.stdin.write(`
 while true; do
   numberOfRunningPods=$(kubectl get pods -o=json | jq -r '.items[] | select(any(.status.containerStatuses[]; .state.running)) | .metadata.labels.app' | wc -l)
-  echo "Número de pods en estado 'Running': $numberOfRunningPods de ${nombresDespliegues.length}"
+  echo "Número de pods en estado 'Running': $numberOfRunningPods de ${nombresDespliegues.length + 6}"
 
-  if [[ ${this.nombresDespliegues.length} -le $numberOfRunningPods ]]; then
+  if [[ ${this.nombresDespliegues.length + 6} -le $numberOfRunningPods ]]; then
     echo "Condición cumplida. Saliendo del bucle."
     exit 0
   fi

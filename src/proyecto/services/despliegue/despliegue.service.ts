@@ -199,4 +199,16 @@ export class DespliegueService {
 
     return await this.despliegueRepo.delete(id);
   }
+
+  async removeDeploymentHelm(nombreApp: string) {
+    const deleteCommand = `helm delete ${nombreApp}`;
+    const { stdout, stderr } = await this.executeCommand(deleteCommand);
+
+    if (stderr) {
+      console.error(`Error al eliminar el despliegue ${stderr}`);
+    }
+    console.log(`Despliegue y servicio eliminados correctamente: ${stdout}`);
+
+    return 'Despliegue eliminado';
+  }
 }

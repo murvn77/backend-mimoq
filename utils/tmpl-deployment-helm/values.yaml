@@ -14,6 +14,7 @@ cantReplicas:
   - 1
   - 2
 containersPods: 2
+autoscaling: false
 minReplicas: 1
 maxReplicas: 5
 targetCPUUtilizationPercentage: 80

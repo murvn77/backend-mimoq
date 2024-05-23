@@ -4,6 +4,11 @@
 
 ### Validar que el namespace no exista
 {{- $namespace := .Values.namespace }}
+{{- $autoscaling := .Values.autoscaling }}
+{{- $minReplicas := .Values.minReplicas }}
+{{- $maxReplicas := .Values.maxReplicas }}
+{{- $targetCPUUtilizationPercentage := .Values.targetCPUUtilizationPercentage }}
+
 {{- $existingNamespace := "" }}
 
 {{- with .Release.Namespace }}
@@ -45,7 +50,7 @@ spec:
             memory: "64Mi"
             cpu: "400m"
 ---
-{{- if false }}
+{{- if $autoscaling }}
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
@@ -58,9 +63,9 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ $appName }}
-  minReplicas: 1 #{{ .Values.minReplicas }}
-  maxReplicas: 5 #{{ .Values.maxReplicas }}
-  targetCPUUtilizationPercentage: 80 #{{ .Values.targetCPUUtilizationPercentage }}
+  minReplicas: {{ $minReplicas }}
+  maxReplicas: {{ $maxReplicas }}
+  targetCPUUtilizationPercentage: {{ $targetCPUUtilizationPercentage }}
 {{- end }}
 ---
 apiVersion: v1

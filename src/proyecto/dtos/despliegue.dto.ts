@@ -6,7 +6,8 @@ import {
   IsNumber,
   IsPositive,
   IsOptional,
-  IsArray
+  IsArray,
+  IsBoolean
 } from 'class-validator';
 
 export class CreateDeploymentDto {
@@ -27,6 +28,25 @@ export class CreateDeploymentDto {
   @IsString()
   @ApiProperty()
   readonly namespace: string;
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty()
+  autoescalado: boolean;
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  @ApiProperty()
+  min_replicas: number;
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  @ApiProperty()
+  max_replicas: number;
+  @IsOptional()
+  @IsNumber()
+  @IsPositive()
+  @ApiProperty()
+  utilization_cpu: number;
   @IsNotEmpty({ message: 'El FK del proyecto es obligatorio' })
   @IsNumber()
   @IsPositive()
@@ -34,4 +54,4 @@ export class CreateDeploymentDto {
   readonly fk_proyecto: number;
 }
 
-export class UpdateDeploymentDto extends PartialType(CreateDeploymentDto) {}
+export class UpdateDeploymentDto extends PartialType(CreateDeploymentDto) { }

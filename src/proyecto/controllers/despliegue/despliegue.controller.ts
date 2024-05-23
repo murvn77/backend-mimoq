@@ -58,4 +58,9 @@ export class DespliegueController {
   removeDeployment(@Param('id', ParseIntPipe) id: number, @Param('nombre') nombre: string) {
     return this.despliegueService.removeDeployment(id, nombre);
   }
+
+  @Delete('nombreHelm/:nombre')
+  removeDeploymentHelm(@Param('nombre') nombre: string) {
+    return this.despliegueService.removeDeploymentHelm(nombre);
+  }
 }

@@ -21,8 +21,17 @@ export class Despliegue {
     @Column({ type: 'integer' })
     puerto: number;
 
-    // @Column({ type: 'varchar', length: 100, nullable: true })
-    // imagen: string;
+    @Column({ type: 'boolean', nullable: true })
+    autoescalado: boolean;
+
+    @Column({ type: 'integer', nullable: true })
+    min_replicas: number;
+
+    @Column({ type: 'integer', nullable: true })
+    max_replicas: number;
+
+    @Column({ type: 'integer', nullable: true })
+    utilization_cpu: number;
 
     @Column({ type: 'varchar', length: 50 })
     nombre_helm: string;

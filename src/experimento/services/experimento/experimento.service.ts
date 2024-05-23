@@ -139,7 +139,7 @@ export class ExperimentoService {
     console.log('METRICS HTTP TO PANELS: ', metricsHTTPToPanels);
 
 
-console.log('LOAD: ', load)
+    console.log('LOAD: ', load)
 
     for (let i = 0; i < deployments.length; i++) {
       const panelesSeleccionados = this.filterPanels(metricsHTTPToPanels);
@@ -190,7 +190,7 @@ console.log('LOAD: ', load)
       console.log('METRICS HTTP TO PANELS: ', metricsHTTPToPanels)
 
       for (let i = 0; i < deployments.length; i++) {
-        const nombres_archivos = await this.generateLoad(metricsHTTPToPanels, deployments, load, data, directoryPath, i, newExperiment);
+        const nombres_archivos = await this.generateLoad(deployments, load, data, directoryPath, i, newExperiment);
         if (!newExperiment.nombres_archivos) {
           newExperiment.nombres_archivos = []; // Inicializa la propiedad si aún no está definida
         }
@@ -210,33 +210,53 @@ console.log('LOAD: ', load)
     }
   }
 
-  private async generateLoad(metricsToPanels: string[], deployments: Despliegue[], load: any, data: CreateExperimentoDto, directoryPath: string, i: number, newExperiment: Experimento) {
+  private async generateLoad(deployments: Despliegue[], load: any, data: CreateExperimentoDto, directoryPath: string, i: number, newExperiment: Experimento) {
     const ipCluster = '127.0.0.1';
     const url = `http://${ipCluster}:${deployments[i].puerto}`;
     const dirLoad = './utils/generate-load-k6/load_test.js';
     console.log(`Generando carga en el microservicio que está en: ${url}`);
     const nombres_archivos: string[] = [];
+    const deploymentName = deployments[i].nombre;
+    newExperiment.tiempo_escalado = [];
 
     for (let j = 0; j < data.cant_replicas; j++) {
       console.log('entra...');
-      const out = `${directoryPath}/results-${deployments[i].nombre}-${i}-replica-${j}.json`;
+      const out = `${directoryPath}/results-${deploymentName}-${i}-replica-${j}.json`;
       console.log('entra...2');
 
-      const loadCommand = `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run --out json=${out} -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," -e SUMMARY="utils/resultados-experimentos/${data.nombre}/resultado-${deployments[i].nombre}.html"  --tag testid=${deployments[i].nombre} ${dirLoad}`;
+      const loadCommand = `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run --out json=${out} -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," -e SUMMARY="utils/resultados-experimentos/${data.nombre}/resultado-${deploymentName}.html"  --tag testid=${deploymentName} ${dirLoad}`;
 
       console.log('entra...3');
+
+      // Ejecutar el script de monitoreo en paralelo usando la ruta absoluta y el identificador de iteración
+      const monitorScriptPath = 'utils/monitor-hpa/monitor_hpa.sh';
+      const args = [`${deploymentName}-hpa`, `${deploymentName}`, deployments[i].utilization_cpu.toString()];
+
+      const monitorCommand = `bash ${monitorScriptPath} ${deploymentName}-hpa ${j}`;
+      const monitorProcess = this.executeCommandHPA(monitorCommand, args);
 
       await this.executeCommand(loadCommand);
       console.log('entra...4');
 
       console.log(`Generó carga. Microserivicio ${i + 1}, réplica ${j + 1}.`);
 
-      nombres_archivos.push(`results-${deployments[i].nombre}-${i}-replica-${j}.json`);
-      nombres_archivos.push(`resultado-${deployments[i].nombre}-replica-${j}.html`);
+      nombres_archivos.push(`results-${deploymentName}-${i}-replica-${j}.json`);
+      nombres_archivos.push(`resultado-${deploymentName}-replica-${j}.html`);
+
+      // Esperar el resultado del script de monitoreo
+      const { stdout: monitorOutput, stderr: monitorError } = await monitorProcess;
+      if (monitorError) {
+        console.error(`Error en el script de monitoreo: ${monitorError}`);
+      }
+
+      const responseTime = monitorOutput.trim();
+      newExperiment.tiempo_escalado.push(responseTime);
+      console.log(`Tiempo de escalamiento para ${deploymentName}, iteración ${j}: ${responseTime}`);
     }
 
     return nombres_archivos;
   }
+
 
   private filterPanels(metricsToPanels: string[]): any[] {
     const dataFile = fs.readFileSync('./utils/build-charts-dash/tmpl-panel.json', 'utf-8');
@@ -285,10 +305,10 @@ console.log('LOAD: ', load)
 
       dashboard.dashboard.templating.list.forEach((item) => {
         if (item.current?.text === "elpepe") {
-            item.current.text = deployment.nombre;
-            item.current.value = `$__${deployment.nombre}`;
+          item.current.text = deployment.nombre;
+          item.current.value = `$__${deployment.nombre}`;
         }
-    });
+      });
 
       await fs.promises.writeFile(`${directoryPath}/dash-${nombre}.json`, JSON.stringify(dashboard, null, 2));
       console.log(`El nuevo archivo JSON del dashboard ${index} se creó correctamente`);
@@ -331,11 +351,43 @@ console.log('LOAD: ', load)
       });
       childProcess.on('close', (code) => {
         if (code !== 0) {
-          reject(new Error(`Command exited with code ${code}`));
+          reject(new Error(`Command exited with code ${code}: ${stderr}`));
         } else {
           resolve({ stdout, stderr });
         }
       });
     });
   }
+
+
+  private async executeCommandHPA(command: string, args: string[]): Promise<{ stdout: string, stderr: string }> {
+    return new Promise((resolve, reject) => {
+      const childProcess = spawn(command, args, { shell: true });
+
+      let stdout = '';
+      let stderr = '';
+
+      childProcess.stdout.on('data', (data) => {
+        stdout += data.toString();
+      });
+
+      childProcess.stderr.on('data', (data) => {
+        stderr += data.toString();
+      });
+
+      childProcess.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Command exited with code ${code}: ${stderr}`));
+        } else {
+          resolve({ stdout, stderr });
+        }
+      });
+
+      childProcess.on('error', (error) => {
+        reject(error);
+      });
+    });
+  }
+
+
 }
