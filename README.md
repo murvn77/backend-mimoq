@@ -24,50 +24,80 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+En este repositorio se encuentra el backend del Sistema de Experimentación MiMoQ. Este fue el proyecto presentado como trabajo de tesis de Ingeniería de Sistemas en la Universidad Javeriana de Bogotá.
 
-## Installation
+## Instalación de dependencias
 
 ```bash
-$ yarn install
+$ npm install
 ```
 
-## Running the app
+## Ejecutar la aplicación
 
 ```bash
 # development
-$ yarn run start
+$ npm run start
+```
+## Complementos necesarios
+Para que esta aplicación funcione completamente, es necesario instalar otras herramientas. En este caso se hizo uso de kubernetes, prometheus, grafana y helm.
 
-# watch mode
-$ yarn run start:dev
+### Entorno de kubernetes
+Para la ejecución de este proyecto se utilizó MicroK8s. La instalación se realizó gracias a la documentación de la página oficial: <a href="https://microk8s.io/docs/getting-started" target="_blank">MicroK8s</a>. 
+Para que la configuración de MicroK8s se relacione correctamente con los archivos que utiliza kubernetes:
 
-# production mode
-$ yarn run start:prod
+```bash
+sudo microk8s refresh-certs -e ca.crt
+microk8s config > ~/.kube/config
+# Conceder permisos
+chmod 600 /home/{usuario}/.kube/config
+```
+
+
+### Prometheus y Grafana
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install prometheus prometheus-community/kube-prometheus-stack
+```
+Una vez se instale, revisar la ip del servicio “prometheus-prometheus-node-exporter” creado en kubernetes. En el archivo “values” cambiar la línea 3765:
+
+![Untitled](https://prod-files-secure.s3.us-west-2.amazonaws.com/3e970946-2a8c-48e2-bc59-dbf43368ac72/beeff861-08c5-4daf-bcc4-0ba453489b23/Untitled.png)
+
+Dado que se modificó el archivo values.yaml, es necesario actualizar el repositorio de prometheus y grafana:
+
+```bash
+helm upgrade prometheus prometheus-community/kube-prometheus-stack -f values.yaml
+```
+#### Ejecución de Prometheus y Grafana
+```bash
+kubectl port-forward prometheus-prometheus-kube-prometheus-prometheus-0 9090
+kubectl port-forward svc/prometheus-grafana 8080:80
 ```
 
 ## Test
 
 ```bash
 # unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+$ npm run test
 ```
 
 ## Support
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Nest 
 
-## Stay in touch
+Nest es proyecto de código abierto con licencia del MIT.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+MiMoQ
 
-## License
+MiMoQ es un proyecto de código abierto que pretende ampliarse con ayuda de la comunidad.
 
-Nest is [MIT licensed](LICENSE).
+## Autores
+
+- Mauren Rivera Bautista
+- Katherine Castro Floréz
+- Kevin Floréz
+- Anderson Alvarado
+
+## Licencia
+
+[MIT licensed](LICENSE).
