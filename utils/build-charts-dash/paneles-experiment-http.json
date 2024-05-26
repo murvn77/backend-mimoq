@@ -1,0 +1,242 @@
+[
+  {
+    "uid": "http_req_duration",
+    "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+    },
+    "description": "Select a different Stat to change the query",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "thresholds"
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        },
+        "unit": "s"
+      },
+      "overrides": []
+    },
+    "gridPos": {
+      "h": 3,
+      "w": 6,
+      "x": 18,
+      "y": 12
+    },
+    "id": 21,
+    "options": {
+      "colorMode": "value",
+      "graphMode": "none",
+      "justifyMode": "auto",
+      "orientation": "auto",
+      "reduceOptions": {
+        "calcs": [],
+        "fields": "",
+        "values": false
+      },
+      "showPercentChange": false,
+      "textMode": "auto",
+      "wideLayout": true
+    },
+    "pluginVersion": "10.4.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "editorMode": "code",
+        "expr": "avg(k6_http_req_duration_$quantile_stat{testid=\"discovery-server\"})",
+        "instant": false,
+        "legendFormat": "__auto",
+        "range": true,
+        "refId": "A"
+      }
+    ],
+    "title": "HTTP Request Duration",
+    "type": "stat"
+  },
+  {
+    "uid": "http_latency_timings",
+    "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+    },
+    "description": "Select a different Stat to change the query\n\n<a href=\"https://k6.io/docs/using-k6/metrics/reference/#http\" target=\"_blank\">HTTP-specific built-in metrics</a>",
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "mode": "palette-classic"
+        },
+        "custom": {
+          "axisBorderShow": false,
+          "axisCenteredZero": false,
+          "axisColorMode": "text",
+          "axisLabel": "",
+          "axisPlacement": "auto",
+          "barAlignment": 0,
+          "drawStyle": "line",
+          "fillOpacity": 0,
+          "gradientMode": "none",
+          "hideFrom": {
+            "legend": false,
+            "tooltip": false,
+            "viz": false
+          },
+          "insertNulls": false,
+          "lineInterpolation": "linear",
+          "lineWidth": 1,
+          "pointSize": 5,
+          "scaleDistribution": {
+            "type": "linear"
+          },
+          "showPoints": "auto",
+          "spanNulls": false,
+          "stacking": {
+            "group": "A",
+            "mode": "none"
+          },
+          "thresholdsStyle": {
+            "mode": "off"
+          }
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green"
+            }
+          ]
+        },
+        "unit": "s"
+      },
+      "overrides": [
+        {
+          "matcher": {
+            "id": "byRegexp",
+            "options": "http_req_duration_[a-zA-Z0-9_]+"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "blue",
+                "mode": "fixed"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "gridPos": {
+      "h": 8,
+      "w": 8,
+      "x": 0,
+      "y": 24
+    },
+    "id": 14,
+    "options": {
+      "legend": {
+        "calcs": [],
+        "displayMode": "list",
+        "placement": "bottom",
+        "showLegend": true
+      },
+      "tooltip": {
+        "mode": "single",
+        "sort": "none"
+      }
+    },
+    "targets": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "editorMode": "code",
+        "expr": "avg(k6_http_req_blocked_$quantile_stat{testid=\"discovery-server\"})",
+        "hide": false,
+        "instant": false,
+        "legendFormat": "http_req_blocked_$quantile_stat",
+        "range": true,
+        "refId": "B"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "editorMode": "code",
+        "expr": "avg(k6_http_req_tls_handshaking_$quantile_stat{testid=\"discovery-server\"})",
+        "hide": false,
+        "instant": false,
+        "legendFormat": "http_req_tls_handshaking_$quantile_stat",
+        "range": true,
+        "refId": "C"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "editorMode": "code",
+        "expr": "avg(k6_http_req_sending_$quantile_stat{testid=\"discovery-server\"})",
+        "hide": false,
+        "instant": false,
+        "legendFormat": "http_req_sending_$quantile_stat",
+        "range": true,
+        "refId": "D"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "editorMode": "code",
+        "expr": "avg(k6_http_req_waiting_$quantile_stat{testid=\"discovery-server\"})",
+        "hide": false,
+        "instant": false,
+        "legendFormat": "http_req_waiting_$quantile_stat",
+        "range": true,
+        "refId": "E"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "editorMode": "code",
+        "expr": "avg(k6_http_req_receiving_$quantile_stat{testid=\"discovery-server\"})",
+        "hide": false,
+        "instant": false,
+        "legendFormat": "http_req_receiving_$quantile_stat",
+        "range": true,
+        "refId": "F"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "editorMode": "code",
+        "expr": "avg(k6_http_req_duration_$quantile_stat{testid=\"discovery-server\"})",
+        "hide": false,
+        "instant": false,
+        "legendFormat": "http_req_duration_$quantile_stat",
+        "range": true,
+        "refId": "A"
+      }
+    ],
+    "title": "HTTP Latency Timings",
+    "type": "timeseries"
+  }
+]

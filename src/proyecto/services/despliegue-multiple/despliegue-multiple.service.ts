@@ -218,16 +218,16 @@ cantReplicas:`;
     }
 
     yamlContent += `
-autoscaling: ${data.autoescalado}`;
+autoscaling: ${data.autoescalado == undefined ? true : data.autoescalado}`;
 
     yamlContent += `
-minReplicas: ${data.min_replicas}`;
+minReplicas: ${data.min_replicas == undefined ? 1 : data.autoescalado}`;
 
     yamlContent += `
-maxReplicas: ${data.max_replicas}`;
+maxReplicas: ${data.max_replicas == undefined ? 5 : data.autoescalado}`;
 
     yamlContent += `
-targetCPUUtilizationPercentage: ${data.utilization_cpu}`;
+targetCPUUtilizationPercentage: ${data.utilization_cpu == undefined ? 80 : data.autoescalado}`;
 
     await this.despliegueUtilsService.deployApp(data.nombre_helm, yamlContent);
 
