@@ -144,7 +144,7 @@ export class ExperimentoService {
       .map(metric => metric.nombre_prometheus);  // Mapeamos las métricas filtradas a sus nombres Prometheus
 
     console.log('METRICS HTTP TO PANELS: ', metricsHttpToPanels);
-    console.log('METRICS INFRA TO PANELS: ', metricsInfraToPanels);
+    console.log('METRIkCS INFRA TO PANELS: ', metricsInfraToPanels);
 
     for (let i = 0; i < deployments.length; i++) {
       const panelesSeleccionadosHttp = this.filterPanelsHttp(metricsHttpToPanels);
@@ -155,7 +155,7 @@ export class ExperimentoService {
     }
 
     const panelesSeleccionadosInfra = this.filterPanelsInfra(metricsInfraToPanels);
-    this.writePanelJsonInfra(panelesSeleccionadosInfra, directoryPath);
+    this.writePanelJsonInfra(panelesSeleccionadosInfra, directoryPath, data.nombre);
     console.log('PASA DEL WRITE... ');
     const iframe = await this.tableroService.loadDashboardInfra(data.nombre);
     iframes.push(iframe);
@@ -233,8 +233,9 @@ export class ExperimentoService {
         console.error(`Error al ejecutar los comandos: ${error.message}`);
       }
 
-      const metricsHttpToPanels = metrics.map(metric => metric.nombre_prometheus);
-      console.log('METRICS HTTP TO PANELS: ', metricsHttpToPanels);
+      const metricsHttpToPanels = metrics
+      .filter(metric => metric.grupo === 'HTTP') // Filtramos las métricas que tienen el grupo 'http'
+      .map(metric => metric.nombre_prometheus);  // Mapeamos las métricas filtradas a sus nombres Prometheus
 
       // Ejecutar el script de monitoreo en paralelo usando la ruta absoluta y el identificador de iteración
       const dataPodScriptPath = 'utils/build-results-metrics/cpu-memory-pod.sh';
@@ -371,7 +372,7 @@ export class ExperimentoService {
     });
   }
 
-  private writePanelJsonInfra(panels: any[], directoryPath: string) {
+  private writePanelJsonInfra(panels: any[], directoryPath: string, nombre: string) {
     const panelesSeleccionados = panels;
 
     fs.writeFile(`./utils/build-charts-dash/paneles-experiment-infra.json`, JSON.stringify(panelesSeleccionados, null, 2), (err) => {
@@ -380,7 +381,7 @@ export class ExperimentoService {
         return;
       }
       console.log(`El nuevo archivo JSON con el service para el despliegue se ha creado correctamente.`);
-      this.addToJsonInfraDash(panelesSeleccionados, directoryPath);
+      this.addToJsonInfraDash(panelesSeleccionados, directoryPath, nombre);
     });
   }
 
@@ -403,23 +404,23 @@ export class ExperimentoService {
         }
       });
 
-      await fs.promises.writeFile(`${directoryPath}/dash-${nombre}-infra.json`, JSON.stringify(dashboard, null, 2));
+      await fs.promises.writeFile(`${directoryPath}/dash-${nombre}-http.json`, JSON.stringify(dashboard, null, 2));
       console.log(`El nuevo archivo JSON INFRA del dashboard ${index} se creó correctamente`);
     } catch (error) {
       console.error('Error al manipular archivos JSON:', error);
     }
   }
 
-  private async addToJsonInfraDash(panelesSeleccionados: any, directoryPath: string) {
+  private async addToJsonInfraDash(panelesSeleccionados: any, directoryPath: string, nombre: string) {
     try {
       const dataDashboard = await fs.promises.readFile('./utils/build-charts-dash/tmpl-tablero-infra.json', 'utf-8');
       const dashboard = JSON.parse(dataDashboard);
-      dashboard.dashboard.title = `dash-infra`;
-      dashboard.dashboard.uid = `dash-infra`;
+      dashboard.dashboard.title = `dash-${nombre}-infra`;
+      dashboard.dashboard.uid = `dash-${nombre}-infra`;
       panelesSeleccionados.forEach((panel: any) => {
         dashboard.dashboard.panels.push(panel);
       });
-      await fs.promises.writeFile(`${directoryPath}/dash-infra.json`, JSON.stringify(dashboard, null, 2));
+      await fs.promises.writeFile(`${directoryPath}/dash-${nombre}-infra.json`, JSON.stringify(dashboard, null, 2));
       console.log(`El nuevo archivo JSON INFRA del dashboard se creó correctamente`);
     } catch (error) {
       console.error('Error al manipular archivos JSON:', error);

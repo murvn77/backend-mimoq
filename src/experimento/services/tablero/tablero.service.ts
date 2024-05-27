@@ -19,7 +19,7 @@ export class TableroService {
       const loadDashboard = `curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${process.env.GRAFANA_PASSWORD}" --data @${basePath} http://admin:prom-operator@localhost:8080/api/dashboards/db`;
       await this.executeCommand(loadDashboard);
 
-      console.log('Tablero creado...');
+      console.log('Tablero creado... Http');
       return await this.loadPanelsHttp(nombre_despliegue);
     } catch (error) {
       console.error('Error al cargar el tablero:', error);
@@ -32,8 +32,8 @@ export class TableroService {
       const loadDashboard = `curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${process.env.GRAFANA_PASSWORD}" --data @${basePath} http://admin:prom-operator@localhost:8080/api/dashboards/db`;
       await this.executeCommand(loadDashboard);
 
-      console.log('Tablero creado...');
-      return await this.loadPanelsHttp(nombre_experimento);
+      console.log('Tablero creado... Infra');
+      return await this.loadPanelsInfra(nombre_experimento);
     } catch (error) {
       console.error('Error al cargar el tablero:', error);
     }
@@ -78,7 +78,7 @@ export class TableroService {
     async loadPanelsInfra(nombre_experimento: string) {
       try {
         // Obtener el UID del dashboard
-        const dashboardSearchResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/search?query=dash-${nombre_experimento}`, {
+        const dashboardSearchResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/search?query=dash-${nombre_experimento}-infra`, {
           headers: {
             Authorization: `Bearer ${process.env.GRAFANA_PASSWORD}`
           }

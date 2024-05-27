@@ -17,14 +17,14 @@ image:
   - name: springcommunity/spring-petclinic-admin-server
     portExpose: 9090
 nodePort:
-  - 31235
-  - 31121
-  - 31436
-  - 30899
-  - 30543
-  - 32057
-  - 31849
-  - 30037
+  - 30525
+  - 30990
+  - 30809
+  - 30614
+  - 32172
+  - 31290
+  - 30624
+  - 30183
 appName:
   - config-server
   - discovery-server
@@ -35,15 +35,15 @@ appName:
   - tracing-server
   - admin-server
 cantReplicas:
+  - 0
+  - 0
   - 1
   - 1
+  - 0
   - 1
-  - 1
-  - 1
-  - 1
-  - 1
-  - 1
-autoscaling: true
+  - 0
+  - 0
+autoscaling: false
 minReplicas: 1
 maxReplicas: 5
 targetCPUUtilizationPercentage: 80

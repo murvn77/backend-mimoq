@@ -221,13 +221,13 @@ cantReplicas:`;
 autoscaling: ${data.autoescalado == undefined ? true : data.autoescalado}`;
 
     yamlContent += `
-minReplicas: ${data.min_replicas == undefined ? 1 : data.autoescalado}`;
+minReplicas: ${data.min_replicas == undefined ? 1 : data.min_replicas}`;
 
     yamlContent += `
-maxReplicas: ${data.max_replicas == undefined ? 5 : data.autoescalado}`;
+maxReplicas: ${data.max_replicas == undefined ? 5 : data.max_replicas}`;
 
     yamlContent += `
-targetCPUUtilizationPercentage: ${data.utilization_cpu == undefined ? 80 : data.autoescalado}`;
+targetCPUUtilizationPercentage: ${data.utilization_cpu == undefined ? 80 : data.utilization_cpu}`;
 
     await this.despliegueUtilsService.deployApp(data.nombre_helm, yamlContent);
 
@@ -273,12 +273,13 @@ targetCPUUtilizationPercentage: ${data.utilization_cpu == undefined ? 80 : data.
       const startTime = Date.now();
       const subprocess = spawn('bash');
 
+      console.log('cantidad nombres despliegues: ', nombresDespliegues);
       subprocess.stdin.write(`
 while true; do
   numberOfRunningPods=$(kubectl get pods -o=json | jq -r '.items[] | select(any(.status.containerStatuses[]; .state.running)) | .metadata.labels.app' | wc -l)
-  echo "Número de pods en estado 'Running': $numberOfRunningPods de ${nombresDespliegues.length + 6}"
+  echo "Número de pods en estado 'Running': $numberOfRunningPods de ${nombresDespliegues.length}"
 
-  if [[ ${this.nombresDespliegues.length + 6} -le $numberOfRunningPods ]]; then
+  if [[ ${this.nombresDespliegues.length} -le $numberOfRunningPods ]]; then
     echo "Condición cumplida. Saliendo del bucle."
     exit 0
   fi

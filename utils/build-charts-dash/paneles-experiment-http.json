@@ -1,11 +1,10 @@
 [
   {
-    "uid": "http_req_duration",
+    "uid": "http_reqs",
     "datasource": {
       "type": "prometheus",
       "uid": "prometheus"
     },
-    "description": "Select a different Stat to change the query",
     "fieldConfig": {
       "defaults": {
         "color": {
@@ -21,17 +20,17 @@
             }
           ]
         },
-        "unit": "s"
+        "unit": "none"
       },
       "overrides": []
     },
     "gridPos": {
       "h": 3,
       "w": 6,
-      "x": 18,
+      "x": 0,
       "y": 12
     },
-    "id": 21,
+    "id": 4,
     "options": {
       "colorMode": "value",
       "graphMode": "none",
@@ -54,23 +53,110 @@
           "uid": "prometheus"
         },
         "editorMode": "code",
-        "expr": "avg(k6_http_req_duration_$quantile_stat{testid=\"discovery-server\"})",
+        "expr": "sum(k6_http_reqs_total{testid=\"visits-service\"}) ",
+        "instant": false,
+        "legendFormat": "__auto",
+        "range": true,
+        "refId": "A"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "expr": "",
+        "hide": false,
+        "instant": false,
+        "range": true,
+        "refId": "B"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "expr": "",
+        "hide": false,
+        "instant": false,
+        "range": true,
+        "refId": "C"
+      }
+    ],
+    "title": "HTTP requests",
+    "type": "stat"
+  },
+  {
+    "uid": "http_req_failed",
+    "datasource": {
+      "type": "prometheus",
+      "uid": "prometheus"
+    },
+    "fieldConfig": {
+      "defaults": {
+        "color": {
+          "fixedColor": "red",
+          "mode": "fixed"
+        },
+        "mappings": [],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "color": "green",
+              "value": null
+            }
+          ]
+        },
+        "unit": "none"
+      },
+      "overrides": []
+    },
+    "gridPos": {
+      "h": 3,
+      "w": 6,
+      "x": 6,
+      "y": 12
+    },
+    "id": 22,
+    "options": {
+      "colorMode": "value",
+      "graphMode": "none",
+      "justifyMode": "auto",
+      "orientation": "auto",
+      "reduceOptions": {
+        "calcs": [],
+        "fields": "",
+        "values": false
+      },
+      "showPercentChange": false,
+      "textMode": "auto",
+      "wideLayout": true
+    },
+    "pluginVersion": "10.4.1",
+    "targets": [
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "editorMode": "code",
+        "expr": "sum(k6_http_reqs_total{testid=\"visits-service\", expected_response=\"false\"})",
         "instant": false,
         "legendFormat": "__auto",
         "range": true,
         "refId": "A"
       }
     ],
-    "title": "HTTP Request Duration",
+    "title": "HTTP request failures",
     "type": "stat"
   },
   {
-    "uid": "http_latency_timings",
+    "uid": "http_latency_stats",
     "datasource": {
       "type": "prometheus",
       "uid": "prometheus"
     },
-    "description": "Select a different Stat to change the query\n\n<a href=\"https://k6.io/docs/using-k6/metrics/reference/#http\" target=\"_blank\">HTTP-specific built-in metrics</a>",
+    "description": "Select a different Stat to change the query",
     "fieldConfig": {
       "defaults": {
         "color": {
@@ -82,6 +168,7 @@
           "axisColorMode": "text",
           "axisLabel": "",
           "axisPlacement": "auto",
+          "axisSoftMin": 0,
           "barAlignment": 0,
           "drawStyle": "line",
           "fillOpacity": 0,
@@ -123,6 +210,51 @@
         {
           "matcher": {
             "id": "byRegexp",
+            "options": "errors_http_req_duration_[a-zA-Z0-9_]+"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "red",
+                "mode": "fixed"
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byRegexp",
+            "options": "success_http_req_duration_[a-zA-Z0-9_]+"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "green",
+                "mode": "fixed"
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byRegexp",
+            "options": "http_req_duration_[a-zA-Z0-9_]+"
+          },
+          "properties": [
+            {
+              "id": "color",
+              "value": {
+                "fixedColor": "yellow",
+                "mode": "fixed"
+              }
+            }
+          ]
+        },
+        {
+          "matcher": {
+            "id": "byRegexp",
             "options": "http_req_duration_[a-zA-Z0-9_]+"
           },
           "properties": [
@@ -140,10 +272,10 @@
     "gridPos": {
       "h": 8,
       "w": 8,
-      "x": 0,
+      "x": 8,
       "y": 24
     },
-    "id": 14,
+    "id": 15,
     "options": {
       "legend": {
         "calcs": [],
@@ -163,12 +295,12 @@
           "uid": "prometheus"
         },
         "editorMode": "code",
-        "expr": "avg(k6_http_req_blocked_$quantile_stat{testid=\"discovery-server\"})",
+        "expr": "avg(k6_http_req_duration_$quantile_stat{testid=\"visits-service\"})",
         "hide": false,
         "instant": false,
-        "legendFormat": "http_req_blocked_$quantile_stat",
+        "legendFormat": "http_req_duration_$quantile_stat",
         "range": true,
-        "refId": "B"
+        "refId": "A"
       },
       {
         "datasource": {
@@ -176,10 +308,9 @@
           "uid": "prometheus"
         },
         "editorMode": "code",
-        "expr": "avg(k6_http_req_tls_handshaking_$quantile_stat{testid=\"discovery-server\"})",
-        "hide": false,
+        "expr": "avg(k6_http_req_duration_$quantile_stat{testid=\"visits-service\", expected_response=\"true\"})",
         "instant": false,
-        "legendFormat": "http_req_tls_handshaking_$quantile_stat",
+        "legendFormat": "success_http_req_duration_$quantile_stat",
         "range": true,
         "refId": "C"
       },
@@ -189,54 +320,15 @@
           "uid": "prometheus"
         },
         "editorMode": "code",
-        "expr": "avg(k6_http_req_sending_$quantile_stat{testid=\"discovery-server\"})",
+        "expr": "avg(k6_http_req_duration_$quantile_stat{testid=\"visits-service\", expected_response=\"false\"})",
         "hide": false,
         "instant": false,
-        "legendFormat": "http_req_sending_$quantile_stat",
+        "legendFormat": "errors_http_req_duration_$quantile_stat",
         "range": true,
-        "refId": "D"
-      },
-      {
-        "datasource": {
-          "type": "prometheus",
-          "uid": "prometheus"
-        },
-        "editorMode": "code",
-        "expr": "avg(k6_http_req_waiting_$quantile_stat{testid=\"discovery-server\"})",
-        "hide": false,
-        "instant": false,
-        "legendFormat": "http_req_waiting_$quantile_stat",
-        "range": true,
-        "refId": "E"
-      },
-      {
-        "datasource": {
-          "type": "prometheus",
-          "uid": "prometheus"
-        },
-        "editorMode": "code",
-        "expr": "avg(k6_http_req_receiving_$quantile_stat{testid=\"discovery-server\"})",
-        "hide": false,
-        "instant": false,
-        "legendFormat": "http_req_receiving_$quantile_stat",
-        "range": true,
-        "refId": "F"
-      },
-      {
-        "datasource": {
-          "type": "prometheus",
-          "uid": "prometheus"
-        },
-        "editorMode": "code",
-        "expr": "avg(k6_http_req_duration_$quantile_stat{testid=\"discovery-server\"})",
-        "hide": false,
-        "instant": false,
-        "legendFormat": "http_req_duration_$quantile_stat",
-        "range": true,
-        "refId": "A"
+        "refId": "B"
       }
     ],
-    "title": "HTTP Latency Timings",
+    "title": "HTTP Latency Stats",
     "type": "timeseries"
   }
 ]

@@ -1,0 +1,93 @@
+[
+  {
+    "uid": "cpu_usage",
+    "aliasColors": {},
+    "bars": false,
+    "dashLength": 10,
+    "dashes": false,
+    "datasource": {
+      "uid": "$datasource"
+    },
+    "fill": 1,
+    "fillGradient": 0,
+    "gridPos": {
+      "h": 7,
+      "w": 12,
+      "x": 0,
+      "y": 1
+    },
+    "hiddenSeries": false,
+    "id": 2,
+    "legend": {
+      "alignAsTable": false,
+      "avg": false,
+      "current": false,
+      "max": false,
+      "min": false,
+      "rightSide": false,
+      "show": true,
+      "total": false,
+      "values": false
+    },
+    "lines": true,
+    "linewidth": 1,
+    "nullPointMode": "null",
+    "options": {
+      "alertThreshold": true
+    },
+    "percentage": false,
+    "pluginVersion": "10.4.1",
+    "pointradius": 5,
+    "points": false,
+    "renderer": "flot",
+    "seriesOverrides": [],
+    "spaceLength": 10,
+    "stack": true,
+    "steppedLine": false,
+    "targets": [
+      {
+        "datasource": {
+          "uid": "$datasource"
+        },
+        "expr": "(\n  (1 - sum without (mode) (rate(node_cpu_seconds_total{job=\"node-exporter\", mode=~\"idle|iowait|steal\", instance=\"$instance\", cluster=\"$cluster\"}[$__rate_interval])))\n/ ignoring(cpu) group_left\n  count without (cpu, mode) (node_cpu_seconds_total{job=\"node-exporter\", mode=\"idle\", instance=\"$instance\", cluster=\"$cluster\"})\n)\n",
+        "format": "time_series",
+        "intervalFactor": 5,
+        "legendFormat": "{{cpu}}",
+        "refId": "A"
+      }
+    ],
+    "thresholds": [],
+    "timeRegions": [],
+    "title": "CPU Usage",
+    "tooltip": {
+      "shared": true,
+      "sort": 0,
+      "value_type": "individual"
+    },
+    "type": "graph",
+    "xaxis": {
+      "mode": "time",
+      "show": true,
+      "values": []
+    },
+    "yaxes": [
+      {
+        "format": "percentunit",
+        "logBase": 1,
+        "max": 1,
+        "min": 0,
+        "show": true
+      },
+      {
+        "format": "percentunit",
+        "logBase": 1,
+        "max": 1,
+        "min": 0,
+        "show": true
+      }
+    ],
+    "yaxis": {
+      "align": false
+    }
+  }
+]
