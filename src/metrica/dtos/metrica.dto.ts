@@ -22,6 +22,10 @@ export class CreateMetricaDto {
     @IsString()
     @ApiProperty()
     readonly grupo: string;
+    @IsNotEmpty({ message: 'Las submetricas son obligatorias' })
+    @IsString()
+    @ApiProperty()
+    readonly submetricas: string;
     @IsNotEmpty({message: 'El FK del subatributo es obligatorio'})
     @IsNumber()
     @IsPositive()

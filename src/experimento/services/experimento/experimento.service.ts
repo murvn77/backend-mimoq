@@ -235,7 +235,7 @@ export class ExperimentoService {
 
       const metricsHttpToPanels = metrics
       .filter(metric => metric.grupo === 'HTTP') // Filtramos las métricas que tienen el grupo 'http'
-      .map(metric => metric.nombre_prometheus);  // Mapeamos las métricas filtradas a sus nombres Prometheus
+      .map(metric => metric.submetricas);  // Mapeamos las métricas filtradas a sus nombres Prometheus
 
       // Ejecutar el script de monitoreo en paralelo usando la ruta absoluta y el identificador de iteración
       const dataPodScriptPath = 'utils/build-results-metrics/cpu-memory-pod.sh';
@@ -267,16 +267,6 @@ export class ExperimentoService {
     const dataHttpMetricsPath = 'utils/build-results-metrics/http-metrics.sh';
     const duration = data.duracion;
 
-    // Función para construir las métricas con el testid
-    const buildMetricsWithTestId = (metrics, testid) => {
-      return metrics.map(metric => {
-        if (metric.includes('(')) {
-          return `${metric}{testid="${testid}"}`.replace('{testid="' + testid + '"}{', '{');
-        }
-        return `${metric}{testid="${testid}"}`;
-      });
-    };
-
     const ipCluster = '127.0.0.1';
     const url = `http://${ipCluster}:${deployments[i].puerto}`;
     const dirLoad = './utils/generate-load-k6/load_test.js';
@@ -286,16 +276,11 @@ export class ExperimentoService {
     newExperiment.tiempo_escalado = [];
 
     for (let j = 0; j < data.cant_replicas; j++) {
-      // Reconstruir las métricas con el testid actual
-      const reconstructedMetrics = buildMetricsWithTestId(metricsHttp, deploymentName);
-      console.log(`RECONSTRUCTED METRICS FOR ${deploymentName}: `, reconstructedMetrics);
-
-      // Generar el comando del script Bash para el testid actual
+      const reconstructedMetrics = this.transformarSubmetricas(metricsHttp, deploymentName);
       const metricsArgument = reconstructedMetrics.map(metric => `'${metric}'`).join(' ');
-      const dataHttpMetricsCommand = `bash ${dataHttpMetricsPath} ${duration} ${directoryPath}/${deploymentName}-${i}-repeticion-${j}.csv 'k6_data_sent_total{testid="${deploymentName}"}' 'k6_data_received_total{testid="${deploymentName}"}'`;
+      console.log('RECONSTTTT: ', metricsArgument)
 
-      // const dataHttpMetricsCommand = `bash ${dataHttpMetricsPath} ${duration} ${directoryPath}/${deploymentName}-${i}-repeticion-${j}.csv ${metricsArgument}`;
-
+      const dataHttpMetricsCommand = `bash ${dataHttpMetricsPath} ${duration} ${directoryPath}/${deploymentName}-${i}-repeticion-${j}.csv ${metricsArgument}`;
 
       console.log('COMMAND TO EXECUTE: ', dataHttpMetricsCommand);
 
@@ -303,14 +288,15 @@ export class ExperimentoService {
       this.executeCommand(dataHttpMetricsCommand);
 
       console.log('entra...');
-      const out = `${directoryPath}/results-${deploymentName}-${i}-replica-${j}.json`;
-      console.log('entra...2');
 
-      const loadCommand = `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," -e SUMMARY="utils/resultados-experimentos/${data.nombre}/resultado-${deploymentName}.html"  --tag testid=${deploymentName} ${dirLoad}`;
+      const loadCommand = `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," --tag testid=${deploymentName} ${dirLoad}`;
+
+      // const loadCommand = `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," -e SUMMARY="utils/resultados-experimentos/${data.nombre}/resultado-${deploymentName}.html"  --tag testid=${deploymentName} ${dirLoad}`;
 
       console.log('entra...3');
 
       if (deployments[i].autoescalado) {
+        console.log('entra...')
         const utilizacionCPU = deployments[i].utilization_cpu.toString();
         const monitorScriptPath = 'utils/monitor-hpa/monitor_hpa.sh';
         const args = [`${deploymentName}-hpa`, `${deploymentName}`, utilizacionCPU];
@@ -322,10 +308,12 @@ export class ExperimentoService {
           console.error(`Error en el script de monitoreo: ${monitorError}`);
         }
         const responseTime = monitorOutput.trim();
-        newExperiment.tiempo_escalado.push(responseTime);
+        console.log('RESPONSEEEEEE TIMEEEEEEEEee: ', responseTime)
+        newExperiment.tiempo_escalado.push(...responseTime);
         console.log(`Tiempo de escalamiento para ${deploymentName}, iteración ${j}: ${responseTime}`);
       }
 
+      console.log('sigue...')
       await this.executeCommand(loadCommand);
       console.log('entra...4');
       console.log(`Generó carga. Microserivicio ${i + 1}, réplica ${j + 1}.`);
@@ -335,6 +323,12 @@ export class ExperimentoService {
     return nombres_archivos;
   }
 
+
+  private transformarSubmetricas(submetricasArray: string[], testid: string): string[] {
+    return submetricasArray.flatMap(submetricas => {
+      return submetricas.split(',').map(submetrica => `${submetrica}{testid="${testid}"}`);
+    });
+  }
 
   private filterPanelsHttp(metricsToPanels: string[]): any[] {
     const dataFile = fs.readFileSync('./utils/build-charts-dash/tmpl-panel-http.json', 'utf-8');
@@ -469,7 +463,6 @@ export class ExperimentoService {
     });
   }
 
-
   private async executeCommandHPA(command: string, args: string[]): Promise<{ stdout: string, stderr: string }> {
     return new Promise((resolve, reject) => {
       const childProcess = spawn(command, args, { shell: true });
@@ -498,6 +491,4 @@ export class ExperimentoService {
       });
     });
   }
-
-
 }

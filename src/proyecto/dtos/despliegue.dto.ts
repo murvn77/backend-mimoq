@@ -34,12 +34,10 @@ export class CreateDeploymentDto {
   autoescalado: boolean;
   @IsOptional()
   @IsNumber()
-  @IsPositive()
   @ApiProperty()
   min_replicas: number;
   @IsOptional()
   @IsNumber()
-  @IsPositive()
   @ApiProperty()
   max_replicas: number;
   @IsOptional()
