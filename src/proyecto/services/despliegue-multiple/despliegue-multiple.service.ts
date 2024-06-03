@@ -237,7 +237,6 @@ targetCPUUtilizationPercentage: ${data.utilization_cpu == undefined ? 80 : data.
       for (let i = 0; i < imagesToBuild.length; i++) {
         const newDeployment = this.despliegueRepo.create(data);
         newDeployment.nombre = this.nombresDespliegues[i];
-        // newDeployment.proyecto = proyecto;
         newDeployment.puerto = this.puertosDespliegues[i];
         newDeployment.cant_replicas = data.replicas[i];
         try {
@@ -259,21 +258,18 @@ targetCPUUtilizationPercentage: ${data.utilization_cpu == undefined ? 80 : data.
       this.puertosExposeApps = [];
       this.imagenesRepository = [];
 
-      console.log('Llega aquí')
       return desplieguesRealizados;
     } else {
       throw new InternalServerErrorException(`Error al subproceso`);
     }
   }
 
-  // Agrego el +6 porque son los pods de grafana y prometheus
+  // Agrego el + 6 porque son los pods de grafana y prometheus
   executeInBackground = async (nombresDespliegues: string[]) => {
     return new Promise((resolve, reject) => {
       const timeoutSeconds = 300; // 5 minutos (en segundos)
       const startTime = Date.now();
       const subprocess = spawn('bash');
-
-      console.log('cantidad nombres despliegues: ', nombresDespliegues);
       subprocess.stdin.write(`
 while true; do
   numberOfRunningPods=$(kubectl get pods -o=json | jq -r '.items[] | select(any(.status.containerStatuses[]; .state.running)) | .metadata.labels.app' | wc -l)
@@ -362,17 +358,13 @@ cantReplicas:`;
     for (let i = 0; i < cambios.replicas.length; i++) {
       yamlContent += `
   - ${cambios.replicas[i]}`;
-      // UPDATE TO BD
     }
 
-    console.log('YML CONTENT: ', yamlContent);
     await this.despliegueUtilsService.deployApp(cambios.nombre_helm, yamlContent);
     const code = await this.executeInBackground(nombresDespliegues);
     if (code !== 0) {
       throw new InternalServerErrorException(`Los microservicios no se desplegaron correctamente`);
     }
-
-    // **HELM UPDATE* ///
 
     this.despliegueRepo.merge(despliegue, cambios);
     return await this.despliegueRepo.save(despliegue);

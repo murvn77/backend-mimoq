@@ -118,16 +118,11 @@ export class DespliegueService {
   /** Construcción de archivo "Values" para Helm */
   async deployApp(nombreApp: string, yamlValues: any): Promise<boolean> {
     try {
-      console.log('DATA VALUES YAML: ', yamlValues);
-
       // Escribir el archivo YAML
       const dirValues = `./utils/values.yaml`;
       fs.writeFileSync(dirValues, yamlValues, 'utf8');
-
       console.log(`Nombre de la aplicación para despliegue: ${nombreApp}`);
-
       const helmCommand = `helm install ${nombreApp} ./utils/tmpl-deployment-helm --values ./utils/values.yaml`;
-
       return await new Promise<boolean>((resolve, reject) => {
         exec(helmCommand, async (error, stdout) => {
           if (error) {

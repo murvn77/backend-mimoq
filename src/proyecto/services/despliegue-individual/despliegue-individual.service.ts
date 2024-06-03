@@ -43,11 +43,7 @@ export class DespliegueIndividualService {
             }
         });
         if (existingDeployment) throw new InternalServerErrorException(`Este despliegue ya está registrado en la base de datos`);
-
-        const envMinikube = `eval $(minikube docker-env)`;
-        await this.despliegueUtilsService.executeCommand(envMinikube);
-        console.log(`Minikube trabaja con configuración local`);
-
+        
         for (let i = 0; i < proyecto.urls_repositorios.length; i++) {
             const tempDir = `./utils/temp-repo-${Date.now()}`;
             await this.despliegueUtilsService.cloneRepository(proyecto.urls_repositorios[i], tempDir);

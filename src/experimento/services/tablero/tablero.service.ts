@@ -18,8 +18,6 @@ export class TableroService {
       const basePath = `./utils/resultados-experimentos/${nombre_experimento}/dash-${nombre_despliegue}-http.json`;
       const loadDashboard = `curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${process.env.GRAFANA_PASSWORD}" --data @${basePath} http://admin:prom-operator@localhost:8080/api/dashboards/db`;
       await this.executeCommand(loadDashboard);
-
-      console.log('Tablero creado... Http');
       return await this.loadPanelsHttp(nombre_despliegue);
     } catch (error) {
       console.error('Error al cargar el tablero:', error);
@@ -31,8 +29,6 @@ export class TableroService {
       const basePath = `./utils/resultados-experimentos/${nombre_experimento}/dash-${nombre_experimento}-infra.json`;
       const loadDashboard = `curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer ${process.env.GRAFANA_PASSWORD}" --data @${basePath} http://admin:prom-operator@localhost:8080/api/dashboards/db`;
       await this.executeCommand(loadDashboard);
-
-      console.log('Tablero creado... Infra');
       return await this.loadPanelsInfra(nombre_experimento);
     } catch (error) {
       console.error('Error al cargar el tablero:', error);
@@ -41,20 +37,15 @@ export class TableroService {
 
     async loadPanelsHttp(nombre_despliegue: string) {
       try {
-        // Obtener el UID del dashboard
         const dashboardSearchResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/search?query=dash-${nombre_despliegue}`, {
           headers: {
             Authorization: `Bearer ${process.env.GRAFANA_PASSWORD}`
           }
         });
         const dashboardUid = dashboardSearchResponse.data[0].uid;
-
-        // Verificar si se encontró el dashboard
         if (!dashboardUid) {
           throw new Error('No se encontró el UID del dashboard');
         }
-
-        // Obtener información de los paneles del dashboard
         const dashboardInfoResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/dashboards/uid/${dashboardUid}`, {
           headers: {
             Authorization: `Bearer ${process.env.GRAFANA_PASSWORD}`
@@ -62,12 +53,9 @@ export class TableroService {
         });
         const panelsInfo = dashboardInfoResponse.data.dashboard.panels.map((panel: any) => panel.id);
 
-        // Construir los iframes para cada panel
         const iframes = panelsInfo.map((panelId: string) =>
           `<iframe src="http://localhost:8080/d-solo/${dashboardUid}/panelexportatepls?orgId=1&refresh=5s&panelId=${panelId}" width="450" height="200" frameborder="0"></iframe>`
         );
-        console.log('Paneles cargados:', iframes);
-
         return iframes;
       } catch (error) {
         console.error('Error al cargar los paneles:', error);
@@ -77,7 +65,6 @@ export class TableroService {
 
     async loadPanelsInfra(nombre_experimento: string) {
       try {
-        // Obtener el UID del dashboard
         const dashboardSearchResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/search?query=dash-${nombre_experimento}-infra`, {
           headers: {
             Authorization: `Bearer ${process.env.GRAFANA_PASSWORD}`
@@ -85,12 +72,10 @@ export class TableroService {
         });
         const dashboardUid = dashboardSearchResponse.data[0].uid;
 
-        // Verificar si se encontró el dashboard
         if (!dashboardUid) {
           throw new Error('No se encontró el UID del dashboard');
         }
 
-        // Obtener información de los paneles del dashboard
         const dashboardInfoResponse = await axios.get(`http://admin:prom-operator@localhost:8080/api/dashboards/uid/${dashboardUid}`, {
           headers: {
             Authorization: `Bearer ${process.env.GRAFANA_PASSWORD}`
@@ -102,8 +87,6 @@ export class TableroService {
         const iframes = panelsInfo.map((panelId: string) =>
           `<iframe src="http://localhost:8080/d-solo/${dashboardUid}/panelexportatepls?orgId=1&refresh=5s&panelId=${panelId}" width="450" height="200" frameborder="0"></iframe>`
         );
-        console.log('Paneles cargados:', iframes);
-
         return iframes;
       } catch (error) {
         console.error('Error al cargar los paneles:', error);

@@ -143,23 +143,17 @@ export class ExperimentoService {
       .filter(metric => metric.grupo !== 'HTTP') // Filtramos las métricas que no tienen el grupo 'http'
       .map(metric => metric.nombre_prometheus);  // Mapeamos las métricas filtradas a sus nombres Prometheus
 
-    console.log('METRICS HTTP TO PANELS: ', metricsHttpToPanels);
-    console.log('METRIkCS INFRA TO PANELS: ', metricsInfraToPanels);
-
     for (let i = 0; i < deployments.length; i++) {
       const panelesSeleccionadosHttp = this.filterPanelsHttp(metricsHttpToPanels);
       this.writePanelJsonHttp(panelesSeleccionadosHttp, load.duracion_total[i], deployments[i], i, directoryPath);
-      console.log('PASA DEL WRITE... ');
       const iframe = await this.tableroService.loadDashboardHttp(data.nombre, deployments[i].nombre);
       iframes.push(iframe);
     }
 
     const panelesSeleccionadosInfra = this.filterPanelsInfra(metricsInfraToPanels);
     this.writePanelJsonInfra(panelesSeleccionadosInfra, directoryPath, data.nombre);
-    console.log('PASA DEL WRITE... ');
     const iframe = await this.tableroService.loadDashboardInfra(data.nombre);
     iframes.push(iframe);
-
     return iframes;
   }
 
@@ -175,9 +169,6 @@ export class ExperimentoService {
 
       if (!fs.existsSync(directoryPath)) {
         fs.mkdirSync(directoryPath);
-        console.log(`Directorio '${formattedName}' creado en '${basePath}'.`);
-      } else {
-        console.log(`El directorio '${formattedName}' ya existe en '${basePath}'.`);
       }
 
       for (const fk_id_metrica of data.fk_ids_metricas) {
@@ -193,12 +184,8 @@ export class ExperimentoService {
         deployments.push(deployment);
       }
 
-      console.log('DEPSLIEGUEEEES: ', deployments);
-
-      // Pods of deployments
       // Convertir los nombres de los despliegues en una cadena separada por comas
       const searchStrings = deployments.map(deploy => deploy.nombre).join(',');
-      console.log('searchhhStrings: ', searchStrings)
 
       // Comando para obtener los nombres de los pods que contienen las cadenas de búsqueda
       const podsNamesCommand = `bash utils/build-results-metrics/search-pod-name.sh -n default -s ${searchStrings}`;
@@ -207,19 +194,13 @@ export class ExperimentoService {
       try {
         // Ejecutar el comando para obtener los nombres de los pods
         const { stdout: podsStdout, stderr: podsStderr } = await this.despliegueUtilsService.executeCommand(podsNamesCommand);
-
         if (podsStderr) {
           console.error(`Error en el comando para obtener nombres de pods: ${podsStderr}`);
         } else {
-          // Procesar la salida del comando para obtener nombres de pods
           allNamesPods = podsStdout.trim(); // La salida será una cadena de nombres de pods separados por comas
-          console.log(`Nombres de los pods encontrados: ${allNamesPods}`);
         }
 
-        // Comando para contar el número de pods en estado "Running"
         const buildCommand = `kubectl get pods --no-headers | grep "Running" | wc -l`;
-
-        // Ejecutar el comando para contar el número de pods en estado "Running"
         const { stdout: buildStdout, stderr: buildStderr } = await this.despliegueUtilsService.executeCommand(buildCommand);
 
         if (buildStderr) {
@@ -234,8 +215,8 @@ export class ExperimentoService {
       }
 
       const metricsHttpToPanels = metrics
-      .filter(metric => metric.grupo === 'HTTP') // Filtramos las métricas que tienen el grupo 'http'
-      .map(metric => metric.submetricas);  // Mapeamos las métricas filtradas a sus nombres Prometheus
+        .filter(metric => metric.grupo === 'HTTP') // Filtramos las métricas que tienen el grupo 'http'
+        .map(metric => metric.submetricas);  // Mapeamos las métricas filtradas a sus nombres Prometheus
 
       // Ejecutar el script de monitoreo en paralelo usando la ruta absoluta y el identificador de iteración
       const dataPodScriptPath = 'utils/build-results-metrics/cpu-memory-pod.sh';
@@ -278,46 +259,38 @@ export class ExperimentoService {
     for (let j = 0; j < data.cant_replicas; j++) {
       const reconstructedMetrics = this.transformarSubmetricas(metricsHttp, deploymentName);
       const metricsArgument = reconstructedMetrics.map(metric => `'${metric}'`).join(' ');
-      console.log('RECONSTTTT: ', metricsArgument)
-
       const dataHttpMetricsCommand = `bash ${dataHttpMetricsPath} ${duration} ${directoryPath}/${deploymentName}-${i}-repeticion-${j}.csv ${metricsArgument}`;
-
-      console.log('COMMAND TO EXECUTE: ', dataHttpMetricsCommand);
-
       // Ejecutar el comando
       this.executeCommand(dataHttpMetricsCommand);
-
-      console.log('entra...');
-
       const loadCommand = `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," --tag testid=${deploymentName} ${dirLoad}`;
-
-      // const loadCommand = `K6_PROMETHEUS_RW_SERVER_URL=http://localhost:9090/api/v1/write k6 run -o experimental-prometheus-rw -e API_URL=${url} -e VUS="${load.cant_usuarios[i]}" -e DURATION="${load.duracion_picos[i]}" -e ENDPOINTS="${data.endpoints[j]}" -e DELIMITER="," -e SUMMARY="utils/resultados-experimentos/${data.nombre}/resultado-${deploymentName}.html"  --tag testid=${deploymentName} ${dirLoad}`;
-
-      console.log('entra...3');
-
       if (deployments[i].autoescalado) {
-        console.log('entra...')
+        console.log('entra...');
         const utilizacionCPU = deployments[i].utilization_cpu.toString();
         const monitorScriptPath = 'utils/monitor-hpa/monitor_hpa.sh';
         const args = [`${deploymentName}-hpa`, `${deploymentName}`, utilizacionCPU];
-        const monitorCommand = `bash ${monitorScriptPath} ${deploymentName}-hpa ${j}`;
-        const monitorProcess = this.executeCommandHPA(monitorCommand, args);
-        // Esperar el resultado del script de monitoreo
-        const { stdout: monitorOutput, stderr: monitorError } = await monitorProcess;
-        if (monitorError) {
-          console.error(`Error en el script de monitoreo: ${monitorError}`);
-        }
-        const responseTime = monitorOutput.trim();
-        console.log('RESPONSEEEEEE TIMEEEEEEEEee: ', responseTime)
-        newExperiment.tiempo_escalado.push(...responseTime);
-        console.log(`Tiempo de escalamiento para ${deploymentName}, iteración ${j}: ${responseTime}`);
-      }
+        const monitorProcess = spawn('bash', [monitorScriptPath, ...args]);
 
-      console.log('sigue...')
-      await this.executeCommand(loadCommand);
-      console.log('entra...4');
-      console.log(`Generó carga. Microserivicio ${i + 1}, réplica ${j + 1}.`);
-      nombres_archivos.push(`results-${deploymentName}-${i}-replica-${j}.csv`);
+        monitorProcess.stdout.on('data', async (data) => {
+          const responseTime = data.toString().trim();
+          newExperiment.tiempo_escalado.push(responseTime);
+          console.log(`Tiempo de escalamiento para ${deploymentName}, iteración ${j}: ${responseTime}`);
+          await this.executeCommand(loadCommand);
+          console.log(`Generó carga. Microserivicio ${i + 1}, repetición ${j + 1}.`);
+          nombres_archivos.push(`${deploymentName}-${i}-repeticion-${j}.csv`);
+        });
+
+        monitorProcess.stderr.on('data', (data) => {
+          console.error(`Error en el script de monitoreo: ${data.toString()}`);
+        });
+
+        monitorProcess.on('close', (code) => {
+          console.log(`El script de monitoreo finalizó con el código ${code}`);
+        });
+      } else {
+        this.executeCommand(loadCommand);
+        console.log(`Generó carga. Microserivicio ${i + 1}, repetición ${j + 1}.`);
+        nombres_archivos.push(`${deploymentName}-${i}-repeticion-${j}.csv`);
+      }
     }
 
     return nombres_archivos;
@@ -345,9 +318,7 @@ export class ExperimentoService {
   }
 
   private writePanelJsonHttp(panels: any[], duracion: string, deployment: Despliegue, index: number, directoryPath: string) {
-    console.log(deployment);
     const panelesSeleccionados = panels;
-    // Cambiar el nombre del testing de cada panel
     for (const panel of panelesSeleccionados) {
       for (const target of panel.targets) {
         if (target.expr?.includes("elpepe")) {
@@ -361,7 +332,6 @@ export class ExperimentoService {
         console.error('Error al guardar el service en el nuevo archivo JSON:', err);
         return;
       }
-      console.log(`El nuevo archivo JSON con el service para el despliegue ${index} se ha creado correctamente.`);
       this.addToJsonHttpDash(index, panelesSeleccionados, duracion, deployment, directoryPath);
     });
   }
@@ -374,7 +344,6 @@ export class ExperimentoService {
         console.error('Error al guardar el service en el nuevo archivo JSON:', err);
         return;
       }
-      console.log(`El nuevo archivo JSON con el service para el despliegue se ha creado correctamente.`);
       this.addToJsonInfraDash(panelesSeleccionados, directoryPath, nombre);
     });
   }
@@ -382,7 +351,6 @@ export class ExperimentoService {
   private async addToJsonHttpDash(index: number, panelesSeleccionados: any, duracion: string, deployment: Despliegue, directoryPath: string) {
     try {
       const nombre = deployment.nombre;
-      console.log('DURATION: ', duracion)
       const dataDashboard = await fs.promises.readFile('./utils/build-charts-dash/tmpl-tablero-http.json', 'utf-8');
       const dashboard = JSON.parse(dataDashboard);
       dashboard.dashboard.title = `dash-${nombre}-http`;
@@ -397,9 +365,7 @@ export class ExperimentoService {
           item.current.value = `$__${deployment.nombre}`;
         }
       });
-
       await fs.promises.writeFile(`${directoryPath}/dash-${nombre}-http.json`, JSON.stringify(dashboard, null, 2));
-      console.log(`El nuevo archivo JSON INFRA del dashboard ${index} se creó correctamente`);
     } catch (error) {
       console.error('Error al manipular archivos JSON:', error);
     }
@@ -415,7 +381,6 @@ export class ExperimentoService {
         dashboard.dashboard.panels.push(panel);
       });
       await fs.promises.writeFile(`${directoryPath}/dash-${nombre}-infra.json`, JSON.stringify(dashboard, null, 2));
-      console.log(`El nuevo archivo JSON INFRA del dashboard se creó correctamente`);
     } catch (error) {
       console.error('Error al manipular archivos JSON:', error);
     }
